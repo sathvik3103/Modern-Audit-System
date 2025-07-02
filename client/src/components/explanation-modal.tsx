@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, Calendar, Sparkles } from "lucide-react";
 import { FlaggedCompany, CompanyExplanation } from "@/types/audit";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getFlagDisplayInfo } from "@/lib/audit-rules";
 
 interface ExplanationModalProps {
   open: boolean;
@@ -84,7 +85,7 @@ export default function ExplanationModal({ open, onOpenChange, company, explanat
                   <div className="md:col-span-2">
                     <span className="text-gray-600">Flags:</span>
                     <span className="ml-2 font-medium">
-                      {explanation.flags.map(flag => flag.flagType).join(', ')}
+                      {explanation.flags.map(flag => getFlagDisplayInfo(flag.flagType).label).join(', ')}
                     </span>
                   </div>
                 </div>
