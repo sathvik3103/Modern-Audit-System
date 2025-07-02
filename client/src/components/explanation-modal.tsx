@@ -61,7 +61,7 @@ export default function ExplanationModal({ open, onOpenChange, company, explanat
                     <span className="ml-2 font-medium">{explanation.company.corpId}</span>
                   </div>
                   <div>
-                    <span className="text-gray-600">Total Flags:</span>
+                    <span className="text-gray-600">Flags Count:</span>
                     <span className="ml-2 font-medium">{explanation.flags.length}</span>
                   </div>
                   <div>
@@ -70,30 +70,23 @@ export default function ExplanationModal({ open, onOpenChange, company, explanat
                       {explanation.flags.reduce((sum, flag) => sum + flag.riskScore, 0)} pts
                     </span>
                   </div>
-                  {explanation.company.bubblegumTax && (
-                    <div>
-                      <span className="text-gray-600">Bubblegum Tax:</span>
-                      <span className="ml-2 font-medium">
-                        ${parseFloat(explanation.company.bubblegumTax).toLocaleString()}
-                      </span>
-                    </div>
-                  )}
-                  {explanation.company.confectionarySalesTaxPercent && (
-                    <div>
-                      <span className="text-gray-600">Sales Tax %:</span>
-                      <span className="ml-2 font-medium">
-                        {explanation.company.confectionarySalesTaxPercent}%
-                      </span>
-                    </div>
-                  )}
-                  {explanation.audit && (
-                    <div>
-                      <span className="text-gray-600">Last Audit:</span>
-                      <span className="ml-2 font-medium">
-                        {explanation.audit.yearsAgo} years ago
-                      </span>
-                    </div>
-                  )}
+                  <div>
+                    <span className="text-gray-600">Risk Level:</span>
+                    <span className="ml-2 font-medium">
+                      {(() => {
+                        const totalRiskScore = explanation.flags.reduce((sum, flag) => sum + flag.riskScore, 0);
+                        if (totalRiskScore >= 60) return "High";
+                        if (totalRiskScore >= 30) return "Medium";
+                        return "Low";
+                      })()}
+                    </span>
+                  </div>
+                  <div className="md:col-span-2">
+                    <span className="text-gray-600">Flags:</span>
+                    <span className="ml-2 font-medium">
+                      {explanation.flags.map(flag => flag.flagType).join(', ')}
+                    </span>
+                  </div>
                 </div>
               </div>
             </>
