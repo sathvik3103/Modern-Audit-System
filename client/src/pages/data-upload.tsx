@@ -111,16 +111,29 @@ export default function DataUploadPage() {
         
         // If it's an Excel serial date (number), convert it
         if (typeof value === 'number') {
-          // Excel epoch starts at 1900-01-01, but treats 1900 as leap year incorrectly
-          // JavaScript Date uses 1970-01-01 epoch
-          const excelEpoch = new Date(1899, 11, 30); // December 30, 1899
-          const jsDate = new Date(excelEpoch.getTime() + value * 24 * 60 * 60 * 1000);
-          return jsDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+          // Excel serial date conversion
+          // Excel counts days since January 1, 1900 (but incorrectly treats 1900 as a leap year)
+          // We need to account for this and avoid timezone issues
+          const excelEpoch = new Date(1900, 0, 1); // January 1, 1900
+          const daysToAdd = value - 1; // Excel is 1-indexed, subtract 1
+          
+          // Create date in local timezone to avoid UTC conversion issues
+          const jsDate = new Date(excelEpoch);
+          jsDate.setDate(jsDate.getDate() + daysToAdd);
+          
+          // Format as YYYY-MM-DD
+          const year = jsDate.getFullYear();
+          const month = String(jsDate.getMonth() + 1).padStart(2, '0');
+          const day = String(jsDate.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
         }
         
-        // If it's a Date object, format it
+        // If it's a Date object, format it properly
         if (value instanceof Date) {
-          return value.toISOString().split('T')[0];
+          const year = value.getFullYear();
+          const month = String(value.getMonth() + 1).padStart(2, '0');
+          const day = String(value.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
         }
         
         return String(value);
