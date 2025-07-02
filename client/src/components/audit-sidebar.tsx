@@ -245,7 +245,7 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
                 min="0"
                 max="200"
               />
-              <span className="text-xs text-gray-500">points</span>
+              <span className="text-xs text-gray-500">points & above</span>
             </div>
             <div className="flex items-center space-x-2">
               <Label className="text-xs text-gray-600 w-20">Medium Risk:</Label>
@@ -257,7 +257,7 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
                 min="0"
                 max="200"
               />
-              <span className="text-xs text-gray-500">points</span>
+              <span className="text-xs text-gray-500">points & above</span>
             </div>
             <p className="text-xs text-gray-500 mt-2">
               Low Risk: Below {rules.mediumRiskThreshold} points
