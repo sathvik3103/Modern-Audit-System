@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Database, Eye, Users, Calendar } from "lucide-react";
+import { ArrowRight, ArrowLeft, Database, Eye, Users, Calendar } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -67,6 +67,10 @@ export default function DataExplorationPage() {
 
   const handleProceedToAudit = () => {
     setLocation("/audit");
+  };
+
+  const handleBackToUpload = () => {
+    setLocation("/");
   };
 
   // Redirect to upload if no data
@@ -370,8 +374,17 @@ export default function DataExplorationPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Proceed Button */}
-        <div className="flex justify-center mt-12">
+        {/* Navigation Buttons */}
+        <div className="flex justify-between items-center mt-12">
+          <Button 
+            onClick={handleBackToUpload}
+            variant="outline"
+            className="flex items-center gap-2 px-6 py-3"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back to Data Upload
+          </Button>
+          
           <Button 
             onClick={handleProceedToAudit}
             className="bg-audit-blue hover:bg-blue-700 flex items-center gap-2 px-8 py-3 text-lg"
