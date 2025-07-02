@@ -178,7 +178,7 @@ export default function DataExplorationPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center">
@@ -192,7 +192,7 @@ export default function DataExplorationPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center">
@@ -345,24 +345,15 @@ export default function DataExplorationPage() {
                         <TableHead>Company Name</TableHead>
                         <TableHead>Corp ID</TableHead>
                         <TableHead>Audit Date</TableHead>
-                        <TableHead>Years Ago</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {audits.slice(0, 10).map((audit) => {
-                        const yearsAgo = Math.floor((new Date().getTime() - new Date(audit.auditDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
                         return (
                           <TableRow key={audit.id}>
                             <TableCell className="font-medium">{audit.corpName}</TableCell>
                             <TableCell>{audit.corpId}</TableCell>
                             <TableCell>{formatDate(audit.auditDate)}</TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant={yearsAgo > 3 ? "destructive" : yearsAgo > 1 ? "secondary" : "default"}
-                              >
-                                {yearsAgo} years
-                              </Badge>
-                            </TableCell>
                           </TableRow>
                         );
                       })}
