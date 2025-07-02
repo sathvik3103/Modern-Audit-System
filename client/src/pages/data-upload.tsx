@@ -112,10 +112,11 @@ export default function DataUploadPage() {
         // If it's an Excel serial date (number), convert it
         if (typeof value === 'number') {
           // Excel serial date conversion
-          // Excel counts days since January 1, 1900 (but incorrectly treats 1900 as a leap year)
-          // We need to account for this and avoid timezone issues
+          // Excel starts counting from January 1, 1900 as day 1
+          // Excel incorrectly treats 1900 as a leap year, so for dates after Feb 28, 1900
+          // we need to subtract 2 days instead of 1
           const excelEpoch = new Date(1900, 0, 1); // January 1, 1900
-          const daysToAdd = value - 1; // Excel is 1-indexed, subtract 1
+          const daysToAdd = value - 2; // Account for Excel's leap year bug
           
           // Create date in local timezone to avoid UTC conversion issues
           const jsDate = new Date(excelEpoch);
