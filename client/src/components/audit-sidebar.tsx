@@ -43,8 +43,16 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
         {/* Rule 1: Bubblegum Tax */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <Label className="text-sm font-medium text-gray-700">Bubblegum Tax Threshold</Label>
-            <Badge variant="secondary" className="bg-green-100 text-green-800">Active</Badge>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={rules.bubblegumEnabled}
+                onCheckedChange={(checked) => updateRule('bubblegumEnabled', !!checked)}
+              />
+              <Label className="text-sm font-medium text-gray-700">Bubblegum Tax Threshold</Label>
+            </div>
+            <Badge variant="secondary" className={rules.bubblegumEnabled ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+              {rules.bubblegumEnabled ? 'Active' : 'Inactive'}
+            </Badge>
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-500">{'>'}</span>
@@ -53,6 +61,7 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
               value={rules.bubblegumThreshold}
               onChange={(e) => updateRule('bubblegumThreshold', parseInt(e.target.value) || 0)}
               className="flex-1"
+              disabled={!rules.bubblegumEnabled}
             />
             <span className="text-sm text-gray-500">USD</span>
           </div>
@@ -62,8 +71,16 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
         {/* Rule 2: Audit Recency */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <Label className="text-sm font-medium text-gray-700">Audit Recency</Label>
-            <Badge variant="secondary" className="bg-green-100 text-green-800">Active</Badge>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={rules.auditRecencyEnabled}
+                onCheckedChange={(checked) => updateRule('auditRecencyEnabled', !!checked)}
+              />
+              <Label className="text-sm font-medium text-gray-700">Audit Recency</Label>
+            </div>
+            <Badge variant="secondary" className={rules.auditRecencyEnabled ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+              {rules.auditRecencyEnabled ? 'Active' : 'Inactive'}
+            </Badge>
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-500">Last audited {`>`}</span>
@@ -72,6 +89,7 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
               value={rules.auditYearsThreshold}
               onChange={(e) => updateRule('auditYearsThreshold', parseInt(e.target.value) || 1)}
               className="w-16"
+              disabled={!rules.auditRecencyEnabled}
             />
             <span className="text-sm text-gray-500">years ago</span>
           </div>
@@ -81,8 +99,16 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
         {/* Rule 3: Confectionary Sales Tax % */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <Label className="text-sm font-medium text-gray-700">Confectionary Sales Tax %</Label>
-            <Badge variant="secondary" className="bg-green-100 text-green-800">Active</Badge>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={rules.salesTaxEnabled}
+                onCheckedChange={(checked) => updateRule('salesTaxEnabled', !!checked)}
+              />
+              <Label className="text-sm font-medium text-gray-700">Confectionary Sales Tax %</Label>
+            </div>
+            <Badge variant="secondary" className={rules.salesTaxEnabled ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+              {rules.salesTaxEnabled ? 'Active' : 'Inactive'}
+            </Badge>
           </div>
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
@@ -93,6 +119,7 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
                 min={0}
                 step={0.5}
                 className="flex-1"
+                disabled={!rules.salesTaxEnabled}
               />
               <span className="text-sm font-medium text-gray-700 w-12">{rules.salesTaxThreshold}%</span>
             </div>
@@ -107,14 +134,23 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
         {/* Rule 4: Data Consistency */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <Label className="text-sm font-medium text-gray-700">Data Consistency Check</Label>
-            <Badge variant="secondary" className="bg-green-100 text-green-800">Active</Badge>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={rules.dataConsistencyEnabled}
+                onCheckedChange={(checked) => updateRule('dataConsistencyEnabled', !!checked)}
+              />
+              <Label className="text-sm font-medium text-gray-700">Data Consistency Check</Label>
+            </div>
+            <Badge variant="secondary" className={rules.dataConsistencyEnabled ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+              {rules.dataConsistencyEnabled ? 'Active' : 'Inactive'}
+            </Badge>
           </div>
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
               <Checkbox
                 checked={rules.checkMissingSalary}
                 onCheckedChange={(checked) => updateRule('checkMissingSalary', !!checked)}
+                disabled={!rules.dataConsistencyEnabled}
               />
               <Label className="text-sm text-gray-700">Missing Salary Data</Label>
             </div>
@@ -122,6 +158,7 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
               <Checkbox
                 checked={rules.checkMissingRevenue}
                 onCheckedChange={(checked) => updateRule('checkMissingRevenue', !!checked)}
+                disabled={!rules.dataConsistencyEnabled}
               />
               <Label className="text-sm text-gray-700">Missing Revenue Data</Label>
             </div>

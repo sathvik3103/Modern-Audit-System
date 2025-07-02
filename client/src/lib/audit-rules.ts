@@ -2,10 +2,14 @@ import { AuditRules, FlaggedCompany, AuditSummary } from '@/types/audit';
 
 export const defaultRules: AuditRules = {
   bubblegumThreshold: 50000,
+  bubblegumEnabled: true,
   auditYearsThreshold: 3,
+  auditRecencyEnabled: true,
   salesTaxThreshold: 10,
+  salesTaxEnabled: true,
   checkMissingSalary: true,
   checkMissingRevenue: true,
+  dataConsistencyEnabled: true,
 };
 
 export function calculateAuditSummary(flaggedCompanies: FlaggedCompany[]): AuditSummary {

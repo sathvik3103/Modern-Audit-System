@@ -72,19 +72,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let riskScore = 0;
         
         // Rule 1: Bubblegum Tax > threshold
-        const bubblegumTax = parseFloat(company.bubblegumTax || "0");
-        if (bubblegumTax > rules.bubblegumThreshold) {
-          const percentOver = ((bubblegumTax - rules.bubblegumThreshold) / rules.bubblegumThreshold * 100).toFixed(0);
-          flags.push({
-            flagType: "high_bubblegum_tax",
-            flagReason: `Bubblegum Tax of $${bubblegumTax.toLocaleString()} exceeds threshold of $${rules.bubblegumThreshold.toLocaleString()} by ${percentOver}%`,
-            severity: bubblegumTax > rules.bubblegumThreshold * 2 ? "high" : "medium"
-          });
-          riskScore += bubblegumTax > rules.bubblegumThreshold * 2 ? 30 : 20;
+        if (rules.bubblegumEnabled) {
+          const bubblegumTax = parseFloat(company.bubblegumTax || "0");
+          if (bubblegumTax > rules.bubblegumThreshold) {
+            const percentOver = ((bubblegumTax - rules.bubblegumThreshold) / rules.bubblegumThreshold * 100).toFixed(0);
+            flags.push({
+              flagType: "high_bubblegum_tax",
+              flagReason: `Bubblegum Tax of $${bubblegumTax.toLocaleString()} exceeds threshold of $${rules.bubblegumThreshold.toLocaleString()} by ${percentOver}%`,
+              severity: bubblegumTax > rules.bubblegumThreshold * 2 ? "high" : "medium"
+            });
+            riskScore += bubblegumTax > rules.bubblegumThreshold * 2 ? 30 : 20;
+          }
         }
         
         // Rule 2: Not audited in past X years
-        if (!audit || audit.auditDate < auditThresholdDate) {
+        if (rules.auditRecencyEnabled && (!audit || audit.auditDate < auditThresholdDate)) {
           const yearsAgo = audit ? 
             Math.floor((currentDate.getTime() - audit.auditDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)) :
             null;
@@ -99,43 +101,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Rule 3: Confectionary Sales Tax % > threshold
-        const salesTaxPercent = parseFloat(company.confectionarySalesTaxPercent || "0");
-        if (salesTaxPercent > rules.salesTaxThreshold) {
-          flags.push({
-            flagType: "high_sales_tax",
-            flagReason: `Confectionary Sales Tax of ${salesTaxPercent}% exceeds threshold of ${rules.salesTaxThreshold}%`,
-            severity: salesTaxPercent > rules.salesTaxThreshold * 1.5 ? "medium" : "low"
-          });
-          riskScore += salesTaxPercent > rules.salesTaxThreshold * 1.5 ? 15 : 10;
+        if (rules.salesTaxEnabled) {
+          const salesTaxPercent = parseFloat(company.confectionarySalesTaxPercent || "0");
+          if (salesTaxPercent > rules.salesTaxThreshold) {
+            flags.push({
+              flagType: "high_sales_tax",
+              flagReason: `Confectionary Sales Tax of ${salesTaxPercent}% exceeds threshold of ${rules.salesTaxThreshold}%`,
+              severity: salesTaxPercent > rules.salesTaxThreshold * 1.5 ? "medium" : "low"
+            });
+            riskScore += salesTaxPercent > rules.salesTaxThreshold * 1.5 ? 15 : 10;
+          }
         }
         
         // Rule 4: Data consistency checks
-        if (rules.checkMissingSalary && !company.salary) {
-          flags.push({
-            flagType: "missing_salary",
-            flagReason: "Salary data is missing",
-            severity: "medium"
-          });
-          riskScore += 10;
-        }
-        
-        if (rules.checkMissingRevenue && !company.revenue) {
-          flags.push({
-            flagType: "missing_revenue",
-            flagReason: "Revenue data is missing", 
-            severity: "medium"
-          });
-          riskScore += 10;
-        }
-        
-        // Salary provided but revenue blank (or vice versa)
-        if ((company.salary && !company.revenue) || (!company.salary && company.revenue)) {
-          flags.push({
-            flagType: "data_inconsistency",
-            flagReason: company.salary ? "Salary provided but Revenue is missing" : "Revenue provided but Salary is missing",
-            severity: "medium"
-          });
-          riskScore += 15;
+        if (rules.dataConsistencyEnabled) {
+          if (rules.checkMissingSalary && !company.salary) {
+            flags.push({
+              flagType: "missing_salary",
+              flagReason: "Salary data is missing",
+              severity: "medium"
+            });
+            riskScore += 10;
+          }
+          
+          if (rules.checkMissingRevenue && !company.revenue) {
+            flags.push({
+              flagType: "missing_revenue",
+              flagReason: "Revenue data is missing", 
+              severity: "medium"
+            });
+            riskScore += 10;
+          }
+          
+          // Salary provided but revenue blank (or vice versa)
+          if ((company.salary && !company.revenue) || (!company.salary && company.revenue)) {
+            flags.push({
+              flagType: "data_inconsistency",
+              flagReason: company.salary ? "Salary provided but Revenue is missing" : "Revenue provided but Salary is missing",
+              severity: "medium"
+            });
+            riskScore += 15;
+          }
         }
         
         if (flags.length > 0) {
@@ -159,10 +165,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
               id: company.id,
               corpName: company.corpName,
               corpId: company.corpId,
-              bubblegumTax: company.bubblegumTax,
-              confectionarySalesTaxPercent: company.confectionarySalesTaxPercent,
+              periodStartDate: company.periodStartDate.toISOString(),
+              periodEndDate: company.periodEndDate.toISOString(),
+              taxableIncome: company.taxableIncome,
               salary: company.salary,
               revenue: company.revenue,
+              amountTaxable: company.amountTaxable,
+              bubblegumTax: company.bubblegumTax,
+              confectionarySalesTaxPercent: company.confectionarySalesTaxPercent,
             },
             audit: audit ? {
               auditDate: audit.auditDate.toISOString(),

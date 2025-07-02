@@ -1,23 +1,31 @@
 export interface AuditRules {
   bubblegumThreshold: number;
+  bubblegumEnabled: boolean;
   auditYearsThreshold: number;
+  auditRecencyEnabled: boolean;
   salesTaxThreshold: number;
+  salesTaxEnabled: boolean;
   checkMissingSalary: boolean;
   checkMissingRevenue: boolean;
+  dataConsistencyEnabled: boolean;
 }
 
 export interface Company {
   id: number;
   corpName: string;
   corpId: number;
-  bubblegumTax: string | null;
-  confectionarySalesTaxPercent: string | null;
+  periodStartDate: string;
+  periodEndDate: string;
+  taxableIncome: string | null;
   salary: string | null;
   revenue: string | null;
+  amountTaxable: string | null;
+  bubblegumTax: string | null;
+  confectionarySalesTaxPercent: string | null;
 }
 
 export interface AuditRecord {
-  auditDate: string | null;
+  auditDate: string | null | undefined;
 }
 
 export interface AuditFlag {

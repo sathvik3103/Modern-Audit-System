@@ -82,6 +82,11 @@ export default function AuditTable({ companies, loading, onShowExplanation, onEx
                   <TableHead>Risk Level</TableHead>
                   <TableHead>Flags</TableHead>
                   <TableHead>Last Audit</TableHead>
+                  <TableHead>Period</TableHead>
+                  <TableHead>Taxable Income</TableHead>
+                  <TableHead>Salary</TableHead>
+                  <TableHead>Revenue</TableHead>
+                  <TableHead>Amount Taxable</TableHead>
                   <TableHead>Bubblegum Tax</TableHead>
                   <TableHead>Sales Tax %</TableHead>
                   <TableHead>Actions</TableHead>
@@ -125,7 +130,24 @@ export default function AuditTable({ companies, loading, onShowExplanation, onEx
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-gray-900">
-                      {formatDate(company.audit?.auditDate)}
+                      {formatDate(company.audit?.auditDate ?? null)}
+                    </TableCell>
+                    <TableCell className="text-sm text-gray-900">
+                      <div className="text-xs text-gray-500">
+                        {formatDate(company.company.periodStartDate)} - {formatDate(company.company.periodEndDate)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-gray-900">
+                      {formatCurrency(company.company.taxableIncome)}
+                    </TableCell>
+                    <TableCell className="text-sm text-gray-900">
+                      {formatCurrency(company.company.salary)}
+                    </TableCell>
+                    <TableCell className="text-sm text-gray-900">
+                      {formatCurrency(company.company.revenue)}
+                    </TableCell>
+                    <TableCell className="text-sm text-gray-900">
+                      {formatCurrency(company.company.amountTaxable)}
                     </TableCell>
                     <TableCell className="text-sm text-gray-900">
                       {formatCurrency(company.company.bubblegumTax)}

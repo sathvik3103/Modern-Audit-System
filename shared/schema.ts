@@ -55,10 +55,14 @@ export type InsertAuditFlag = z.infer<typeof insertAuditFlagSchema>;
 // Additional types for API responses
 export const auditRulesSchema = z.object({
   bubblegumThreshold: z.number().min(0),
+  bubblegumEnabled: z.boolean(),
   auditYearsThreshold: z.number().min(1),
+  auditRecencyEnabled: z.boolean(),
   salesTaxThreshold: z.number().min(0).max(100),
+  salesTaxEnabled: z.boolean(),
   checkMissingSalary: z.boolean(),
   checkMissingRevenue: z.boolean(),
+  dataConsistencyEnabled: z.boolean(),
 });
 
 export type AuditRules = z.infer<typeof auditRulesSchema>;
@@ -68,10 +72,14 @@ export const flaggedCompanySchema = z.object({
     id: z.number(),
     corpName: z.string(),
     corpId: z.number(),
-    bubblegumTax: z.string().nullable(),
-    confectionarySalesTaxPercent: z.string().nullable(),
+    periodStartDate: z.string(),
+    periodEndDate: z.string(),
+    taxableIncome: z.string().nullable(),
     salary: z.string().nullable(),
     revenue: z.string().nullable(),
+    amountTaxable: z.string().nullable(),
+    bubblegumTax: z.string().nullable(),
+    confectionarySalesTaxPercent: z.string().nullable(),
   }),
   audit: z.object({
     auditDate: z.string().nullable(),
