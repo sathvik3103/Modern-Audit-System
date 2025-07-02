@@ -81,7 +81,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               flagReason: `Bubblegum Tax of $${bubblegumTax.toLocaleString()} exceeds threshold of $${rules.bubblegumThreshold.toLocaleString()} by ${percentOver}%`,
               severity: bubblegumTax > rules.bubblegumThreshold * 2 ? "high" : "medium"
             });
-            riskScore += bubblegumTax > rules.bubblegumThreshold * 2 ? 30 : 20;
+            riskScore += rules.bubblegumRiskScore;
           }
         }
         
@@ -97,7 +97,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               "Never been audited",
             severity: !audit ? "high" : (yearsAgo !== null && yearsAgo > rules.auditYearsThreshold * 2) ? "high" : "medium"
           });
-          riskScore += !audit ? 40 : (yearsAgo !== null && yearsAgo > rules.auditYearsThreshold * 2) ? 25 : 15;
+          riskScore += rules.auditRecencyRiskScore;
         }
         
         // Rule 3: Confectionary Sales Tax % > threshold
@@ -109,7 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               flagReason: `Confectionary Sales Tax of ${salesTaxPercent}% exceeds threshold of ${rules.salesTaxThreshold}%`,
               severity: salesTaxPercent > rules.salesTaxThreshold * 1.5 ? "medium" : "low"
             });
-            riskScore += salesTaxPercent > rules.salesTaxThreshold * 1.5 ? 15 : 10;
+            riskScore += rules.salesTaxRiskScore;
           }
         }
         
@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               flagReason: "Salary data is missing",
               severity: "medium"
             });
-            riskScore += 10;
+            riskScore += rules.dataConsistencyRiskScore;
           }
           
           if (rules.checkMissingRevenue && !company.revenue) {
@@ -130,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               flagReason: "Revenue data is missing", 
               severity: "medium"
             });
-            riskScore += 10;
+            riskScore += rules.dataConsistencyRiskScore;
           }
           
           // Salary provided but revenue blank (or vice versa)
@@ -140,15 +140,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
               flagReason: company.salary ? "Salary provided but Revenue is missing" : "Revenue provided but Salary is missing",
               severity: "medium"
             });
-            riskScore += 15;
+            riskScore += rules.dataConsistencyRiskScore;
           }
         }
         
         if (flags.length > 0) {
-          // Determine risk level
+          // Determine risk level using custom thresholds
           let riskLevel = "low";
-          if (riskScore >= 50) riskLevel = "high";
-          else if (riskScore >= 25) riskLevel = "medium";
+          if (riskScore >= rules.highRiskThreshold) riskLevel = "high";
+          else if (riskScore >= rules.mediumRiskThreshold) riskLevel = "medium";
           
           // Store flags in database
           for (const flag of flags) {

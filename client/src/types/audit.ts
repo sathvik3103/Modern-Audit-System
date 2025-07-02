@@ -1,13 +1,20 @@
 export interface AuditRules {
   bubblegumThreshold: number;
   bubblegumEnabled: boolean;
+  bubblegumRiskScore: number;
   auditYearsThreshold: number;
   auditRecencyEnabled: boolean;
+  auditRecencyRiskScore: number;
   salesTaxThreshold: number;
   salesTaxEnabled: boolean;
+  salesTaxRiskScore: number;
   checkMissingSalary: boolean;
   checkMissingRevenue: boolean;
   dataConsistencyEnabled: boolean;
+  dataConsistencyRiskScore: number;
+  // Risk level thresholds
+  highRiskThreshold: number;
+  mediumRiskThreshold: number;
 }
 
 export interface Company {

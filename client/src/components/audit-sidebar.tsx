@@ -54,16 +54,31 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
               {rules.bubblegumEnabled ? 'Active' : 'Inactive'}
             </Badge>
           </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">{'>'}</span>
-            <Input
-              type="number"
-              value={rules.bubblegumThreshold}
-              onChange={(e) => updateRule('bubblegumThreshold', parseInt(e.target.value) || 0)}
-              className="flex-1"
-              disabled={!rules.bubblegumEnabled}
-            />
-            <span className="text-sm text-gray-500">USD</span>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-500">{'>'}</span>
+              <Input
+                type="number"
+                value={rules.bubblegumThreshold}
+                onChange={(e) => updateRule('bubblegumThreshold', parseInt(e.target.value) || 0)}
+                className="flex-1"
+                disabled={!rules.bubblegumEnabled}
+              />
+              <span className="text-sm text-gray-500">USD</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-xs text-gray-500 w-16">Risk Score:</Label>
+              <Input
+                type="number"
+                value={rules.bubblegumRiskScore}
+                onChange={(e) => updateRule('bubblegumRiskScore', parseInt(e.target.value) || 0)}
+                className="flex-1"
+                min="0"
+                max="100"
+                disabled={!rules.bubblegumEnabled}
+              />
+              <span className="text-xs text-gray-500">points</span>
+            </div>
           </div>
           <p className="text-xs text-gray-500 mt-1">Companies with Bubblegum Tax above this amount will be flagged</p>
         </div>
@@ -82,16 +97,31 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
               {rules.auditRecencyEnabled ? 'Active' : 'Inactive'}
             </Badge>
           </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">Last audited {`>`}</span>
-            <Input
-              type="number"
-              value={rules.auditYearsThreshold}
-              onChange={(e) => updateRule('auditYearsThreshold', parseInt(e.target.value) || 1)}
-              className="w-16"
-              disabled={!rules.auditRecencyEnabled}
-            />
-            <span className="text-sm text-gray-500">years ago</span>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-500">Last audited {`>`}</span>
+              <Input
+                type="number"
+                value={rules.auditYearsThreshold}
+                onChange={(e) => updateRule('auditYearsThreshold', parseInt(e.target.value) || 1)}
+                className="w-16"
+                disabled={!rules.auditRecencyEnabled}
+              />
+              <span className="text-sm text-gray-500">years ago</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-xs text-gray-500 w-16">Risk Score:</Label>
+              <Input
+                type="number"
+                value={rules.auditRecencyRiskScore}
+                onChange={(e) => updateRule('auditRecencyRiskScore', parseInt(e.target.value) || 0)}
+                className="flex-1"
+                min="0"
+                max="100"
+                disabled={!rules.auditRecencyEnabled}
+              />
+              <span className="text-xs text-gray-500">points</span>
+            </div>
           </div>
           <p className="text-xs text-gray-500 mt-1">Companies not audited within this timeframe will be flagged</p>
         </div>
@@ -126,6 +156,19 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
             <div className="flex justify-between text-xs text-gray-500">
               <span>0%</span>
               <span>20%</span>
+            </div>
+            <div className="flex items-center space-x-2 mt-2">
+              <Label className="text-xs text-gray-500 w-16">Risk Score:</Label>
+              <Input
+                type="number"
+                value={rules.salesTaxRiskScore}
+                onChange={(e) => updateRule('salesTaxRiskScore', parseInt(e.target.value) || 0)}
+                className="flex-1"
+                min="0"
+                max="100"
+                disabled={!rules.salesTaxEnabled}
+              />
+              <span className="text-xs text-gray-500">points</span>
             </div>
           </div>
           <p className="text-xs text-gray-500 mt-1">Companies above this sales tax percentage will be flagged</p>
@@ -172,6 +215,53 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
                 {rules.checkMissingRevenue && rules.dataConsistencyEnabled ? 'Active' : 'Inactive'}
               </Badge>
             </div>
+            <div className="flex items-center space-x-2 mt-2">
+              <Label className="text-xs text-gray-500 w-16">Risk Score:</Label>
+              <Input
+                type="number"
+                value={rules.dataConsistencyRiskScore}
+                onChange={(e) => updateRule('dataConsistencyRiskScore', parseInt(e.target.value) || 0)}
+                className="flex-1"
+                min="0"
+                max="100"
+                disabled={!rules.dataConsistencyEnabled}
+              />
+              <span className="text-xs text-gray-500">points</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Risk Level Thresholds */}
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+          <h3 className="text-sm font-semibold text-gray-800 mb-3">Risk Level Thresholds</h3>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <Label className="text-xs text-gray-600 w-20">High Risk:</Label>
+              <Input
+                type="number"
+                value={rules.highRiskThreshold}
+                onChange={(e) => updateRule('highRiskThreshold', parseInt(e.target.value) || 0)}
+                className="flex-1"
+                min="0"
+                max="200"
+              />
+              <span className="text-xs text-gray-500">points</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-xs text-gray-600 w-20">Medium Risk:</Label>
+              <Input
+                type="number"
+                value={rules.mediumRiskThreshold}
+                onChange={(e) => updateRule('mediumRiskThreshold', parseInt(e.target.value) || 0)}
+                className="flex-1"
+                min="0"
+                max="200"
+              />
+              <span className="text-xs text-gray-500">points</span>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Low Risk: Below {rules.mediumRiskThreshold} points
+            </p>
           </div>
         </div>
 

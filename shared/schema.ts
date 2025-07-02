@@ -56,13 +56,20 @@ export type InsertAuditFlag = z.infer<typeof insertAuditFlagSchema>;
 export const auditRulesSchema = z.object({
   bubblegumThreshold: z.number().min(0),
   bubblegumEnabled: z.boolean(),
+  bubblegumRiskScore: z.number().min(0).max(100),
   auditYearsThreshold: z.number().min(1),
   auditRecencyEnabled: z.boolean(),
+  auditRecencyRiskScore: z.number().min(0).max(100),
   salesTaxThreshold: z.number().min(0).max(100),
   salesTaxEnabled: z.boolean(),
+  salesTaxRiskScore: z.number().min(0).max(100),
   checkMissingSalary: z.boolean(),
   checkMissingRevenue: z.boolean(),
   dataConsistencyEnabled: z.boolean(),
+  dataConsistencyRiskScore: z.number().min(0).max(100),
+  // Risk level thresholds
+  highRiskThreshold: z.number().min(0).max(200),
+  mediumRiskThreshold: z.number().min(0).max(200),
 });
 
 export type AuditRules = z.infer<typeof auditRulesSchema>;

@@ -3,13 +3,20 @@ import { AuditRules, FlaggedCompany, AuditSummary } from '@/types/audit';
 export const defaultRules: AuditRules = {
   bubblegumThreshold: 50000,
   bubblegumEnabled: true,
+  bubblegumRiskScore: 25,
   auditYearsThreshold: 3,
   auditRecencyEnabled: true,
+  auditRecencyRiskScore: 20,
   salesTaxThreshold: 10,
   salesTaxEnabled: true,
+  salesTaxRiskScore: 15,
   checkMissingSalary: true,
   checkMissingRevenue: true,
   dataConsistencyEnabled: true,
+  dataConsistencyRiskScore: 10,
+  // Risk level thresholds
+  highRiskThreshold: 50,
+  mediumRiskThreshold: 25,
 };
 
 export function calculateAuditSummary(flaggedCompanies: FlaggedCompany[]): AuditSummary {
