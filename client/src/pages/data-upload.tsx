@@ -100,19 +100,31 @@ export default function DataUploadPage() {
       const returnsData = XLSX.utils.sheet_to_json(returnsSheet);
       const auditData = XLSX.utils.sheet_to_json(auditSheet);
 
-      // Process Excel data directly
-      const companies = returnsData.map((row: any) => ({
-        corpName: row["Corp Name"] || row.corpName || "",
-        corpId: parseInt(row.ID || row.corpId || "0"),
-        periodStartDate: row["Period Start Date"] || row.periodStartDate || "",
-        periodEndDate: row["Period End Date"] || row.periodEndDate || "",
-        taxableIncome: (row["Taxable Income"] || row.taxableIncome || "").toString(),
-        salary: row.Salary !== undefined && row.Salary !== null ? String(row.Salary) : null,
-        revenue: row.Revenue !== undefined && row.Revenue !== null ? String(row.Revenue) : null,
-        amountTaxable: (row["Amount Taxable"] || row.amountTaxable || "").toString(),
-        bubblegumTax: (row["Bubblegum Tax"] || row.bubblegumTax || "").toString(),
-        confectionarySalesTaxPercent: (row["Confectionary Sales Tax %"] || row.confectionarySalesTaxPercent || "").toString(),
-      }));
+      // Process Excel data directly with proper string conversion
+      const companies = returnsData.map((row: any) => {
+        const getValue = (key: string, altKey?: string) => {
+          const value = row[key] || (altKey && row[altKey]) || "";
+          return value === "" ? undefined : String(value);
+        };
+        
+        const getNullableValue = (key: string, altKey?: string) => {
+          const value = row[key] !== undefined ? row[key] : (altKey && row[altKey]);
+          return value !== undefined && value !== null && value !== "" ? String(value) : null;
+        };
+
+        return {
+          corpName: String(row["Corp Name"] || row.corpName || ""),
+          corpId: parseInt(String(row.ID || row.corpId || "0")),
+          periodStartDate: String(row["Period Start Date"] || row.periodStartDate || ""),
+          periodEndDate: String(row["Period End Date"] || row.periodEndDate || ""),
+          taxableIncome: getValue("Taxable Income", "taxableIncome"),
+          salary: getNullableValue("Salary", "salary"),
+          revenue: getNullableValue("Revenue", "revenue"),
+          amountTaxable: getValue("Amount Taxable", "amountTaxable"),
+          bubblegumTax: getValue("Bubblegum Tax", "bubblegumTax"),
+          confectionarySalesTaxPercent: getValue("Confectionary Sales Tax %", "confectionarySalesTaxPercent"),
+        };
+      });
 
       const audits = auditData.map((row: any) => ({
         corpId: parseInt(String(row["Audit Name"] || row.corpId || "0")),
@@ -121,6 +133,9 @@ export default function DataUploadPage() {
       }));
 
       const data = { companies, audits };
+      
+      // Debug logging
+      console.log("Processed data:", JSON.stringify(data, null, 2));
       
       const validation = validateUploadData(data);
       

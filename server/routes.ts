@@ -187,6 +187,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Upload and process audit data
   app.post("/api/upload", async (req, res) => {
     try {
+      console.log("Received upload data:", JSON.stringify(req.body, null, 2));
+      
+      // Log first company to see field types
+      if (req.body.companies && req.body.companies.length > 0) {
+        const firstCompany = req.body.companies[0];
+        console.log("First company field types:");
+        Object.entries(firstCompany).forEach(([key, value]) => {
+          console.log(`  ${key}: ${typeof value} = ${value}`);
+        });
+      }
+      
       const uploadSchema = z.object({
         companies: z.array(z.object({
           corpName: z.string(),
