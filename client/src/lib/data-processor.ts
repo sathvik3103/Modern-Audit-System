@@ -4,12 +4,12 @@ export interface UploadData {
     corpId: number;
     periodStartDate: string;
     periodEndDate: string;
-    taxableIncome?: number;
-    salary?: number | null;
-    revenue?: number | null;
-    amountTaxable?: number;
-    bubblegumTax?: number;
-    confectionarySalesTaxPercent?: number;
+    taxableIncome?: string;
+    salary?: string | null;
+    revenue?: string | null;
+    amountTaxable?: string;
+    bubblegumTax?: string;
+    confectionarySalesTaxPercent?: string;
   }>;
   audits?: Array<{
     corpId: number;

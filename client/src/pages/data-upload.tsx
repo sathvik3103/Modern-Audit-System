@@ -100,8 +100,28 @@ export default function DataUploadPage() {
       const returnsData = XLSX.utils.sheet_to_json(returnsSheet);
       const auditData = XLSX.utils.sheet_to_json(auditSheet);
 
-      // Convert to our expected format
-      const data = parseExcelData({ companies: returnsData, audits: auditData });
+      // Process Excel data directly
+      const companies = returnsData.map((row: any) => ({
+        corpName: row["Corp Name"] || row.corpName || "",
+        corpId: parseInt(row.ID || row.corpId || "0"),
+        periodStartDate: row["Period Start Date"] || row.periodStartDate || "",
+        periodEndDate: row["Period End Date"] || row.periodEndDate || "",
+        taxableIncome: (row["Taxable Income"] || row.taxableIncome || "").toString(),
+        salary: row.Salary !== undefined && row.Salary !== null ? String(row.Salary) : null,
+        revenue: row.Revenue !== undefined && row.Revenue !== null ? String(row.Revenue) : null,
+        amountTaxable: (row["Amount Taxable"] || row.amountTaxable || "").toString(),
+        bubblegumTax: (row["Bubblegum Tax"] || row.bubblegumTax || "").toString(),
+        confectionarySalesTaxPercent: (row["Confectionary Sales Tax %"] || row.confectionarySalesTaxPercent || "").toString(),
+      }));
+
+      const audits = auditData.map((row: any) => ({
+        corpId: parseInt(String(row["Audit Name"] || row.corpId || "0")),
+        corpName: String(row.ID || row.corpName || ""),
+        auditDate: String(row["Audit Date"] || row.auditDate || ""),
+      }));
+
+      const data = { companies, audits };
+      
       const validation = validateUploadData(data);
       
       if (!validation.valid) {
