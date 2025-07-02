@@ -1,0 +1,237 @@
+Processed data: {
+  "companies": [
+    {
+      "corpName": "Candy Corp",
+      "corpId": 100000,
+      "periodStartDate": "43831",
+      "periodEndDate": "44196",
+      "taxableIncome": "413224",
+      "salary": null,
+      "revenue": "513224",
+      "amountTaxable": "78513",
+      "bubblegumTax": "6281",
+      "confectionarySalesTaxPercent": "12.74"
+    },
+    {
+      "corpName": "Gum Co",
+      "corpId": 100001,
+      "periodStartDate": "44562",
+      "periodEndDate": "44926",
+      "taxableIncome": "1041579",
+      "salary": "445480",
+      "revenue": "2041579",
+      "amountTaxable": "120345",
+      "bubblegumTax": "2548",
+      "confectionarySalesTaxPercent": "14.38"
+    },
+    {
+      "corpName": "Sweet Inc",
+      "corpId": 100002,
+      "periodStartDate": "44197",
+      "periodEndDate": "44561",
+      "taxableIncome": "1066955",
+      "salary": "492518",
+      "revenue": null,
+      "amountTaxable": "174598",
+      "bubblegumTax": "14587",
+      "confectionarySalesTaxPercent": "9.46"
+    },
+    {
+      "corpName": "Choco Ltd",
+      "corpId": 100003,
+      "periodStartDate": "40909",
+      "periodEndDate": "41274",
+      "taxableIncome": "1460887",
+      "salary": "507124",
+      "revenue": "2560887",
+      "amountTaxable": "156789",
+      "bubblegumTax": "65879",
+      "confectionarySalesTaxPercent": "9.51"
+    },
+    {
+      "corpName": "Toffee Co",
+      "corpId": 100004,
+      "periodStartDate": "41276",
+      "periodEndDate": "41639",
+      "taxableIncome": "629325",
+      "salary": "412568",
+      "revenue": "1229325",
+      "amountTaxable": "145698",
+      "bubblegumTax": "321458",
+      "confectionarySalesTaxPercent": "13.24"
+    },
+    {
+      "corpName": "Lolly Corp",
+      "corpId": 100005,
+      "periodStartDate": "40181",
+      "periodEndDate": "40543",
+      "taxableIncome": "499296",
+      "salary": "421014",
+      "revenue": null,
+      "amountTaxable": "897456",
+      "bubblegumTax": "100005",
+      "confectionarySalesTaxPercent": "8.05"
+    },
+    {
+      "corpName": "Sugar Co",
+      "corpId": 100006,
+      "periodStartDate": "39086",
+      "periodEndDate": "39447",
+      "taxableIncome": "107245",
+      "salary": "88639",
+      "revenue": "657245",
+      "amountTaxable": "54789",
+      "bubblegumTax": "36547",
+      "confectionarySalesTaxPercent": "14.2"
+    },
+    {
+      "corpName": "Fudge Inc",
+      "corpId": 100007,
+      "periodStartDate": "39452",
+      "periodEndDate": "39813",
+      "taxableIncome": "108617",
+      "salary": "11256",
+      "revenue": "208617",
+      "amountTaxable": "65428",
+      "bubblegumTax": "245789",
+      "confectionarySalesTaxPercent": "9.97"
+    },
+    {
+      "corpName": "Taffy Ltd",
+      "corpId": 100008,
+      "periodStartDate": "40184",
+      "periodEndDate": "40543",
+      "taxableIncome": "103495",
+      "salary": null,
+      "revenue": "503495",
+      "amountTaxable": "65478",
+      "bubblegumTax": "25478",
+      "confectionarySalesTaxPercent": "8.51"
+    },
+    {
+      "corpName": "Treats Co",
+      "corpId": 100009,
+      "periodStartDate": "36898",
+      "periodEndDate": "37256",
+      "taxableIncome": "112922",
+      "salary": "4789",
+      "revenue": "452922",
+      "amountTaxable": "12456",
+      "bubblegumTax": "14587",
+      "confectionarySalesTaxPercent": "6.87"
+    },
+    {
+      "corpName": "Snack Inc",
+      "corpId": 100010,
+      "periodStartDate": "40916",
+      "periodEndDate": "41274",
+      "taxableIncome": "321278",
+      "salary": "4587",
+      "revenue": "631278",
+      "amountTaxable": "36547",
+      "bubblegumTax": "568794",
+      "confectionarySalesTaxPercent": "9.74"
+    },
+    {
+      "corpName": "Minty Co",
+      "corpId": 100011,
+      "periodStartDate": "43474",
+      "periodEndDate": "43830",
+      "taxableIncome": "396118",
+      "salary": "32147",
+      "revenue": null,
+      "amountTaxable": "65478",
+      "bubblegumTax": "98745",
+      "confectionarySalesTaxPercent": "12.82"
+    },
+    {
+      "corpName": "Crispy Corp",
+      "corpId": 100012,
+      "periodStartDate": "40918",
+      "periodEndDate": "41274",
+      "taxableIncome": "333369",
+      "salary": "35478",
+      "revenue": "587969",
+      "amountTaxable": "32589",
+      "bubblegumTax": "3254",
+      "confectionarySalesTaxPercent": "13.94"
+    },
+    {
+      "corpName": "Sweets & Co",
+      "corpId": 100013,
+      "periodStartDate": "41650",
+      "periodEndDate": "42004",
+      "taxableIncome": "135914",
+      "salary": null,
+      "revenue": "875914",
+      "amountTaxable": "56478",
+      "bubblegumTax": "12",
+      "confectionarySalesTaxPercent": "5.04"
+    },
+    {
+      "corpName": "Choco Candy Ltd",
+      "corpId": 100014,
+      "periodStartDate": "43842",
+      "periodEndDate": "44196",
+      "taxableIncome": "675392",
+      "salary": "13895",
+      "revenue": "695392",
+      "amountTaxable": "45789",
+      "bubblegumTax": "3657",
+      "confectionarySalesTaxPercent": "7"
+    }
+  ],
+  "audits": [
+    {
+      "corpId": 100000,
+      "corpName": "Candy Corp",
+      "auditDate": "45213"
+    },
+    {
+      "corpId": 100001,
+      "corpName": "Gum Co",
+      "auditDate": "45565"
+    },
+    {
+      "corpId": 100002,
+      "corpName": "Sweet Inc",
+      "auditDate": "44774"
+    },
+    {
+      "corpId": 100008,
+      "corpName": "Taffy Ltd",
+      "auditDate": "40884"
+    },
+    {
+      "corpId": 100009,
+      "corpName": "Treats Co",
+      "auditDate": "37675"
+    },
+    {
+      "corpId": 100010,
+      "corpName": "Snack Inc",
+      "auditDate": "45539"
+    },
+    {
+      "corpId": 100011,
+      "corpName": "Minty Co",
+      "auditDate": "45641"
+    },
+    {
+      "corpId": 100012,
+      "corpName": "Crispy Corp",
+      "auditDate": "42206"
+    },
+    {
+      "corpId": 100013,
+      "corpName": "Sweets & Co",
+      "auditDate": "42206"
+    },
+    {
+      "corpId": 100014,
+      "corpName": "Choco Candy Ltd",
+      "auditDate": "44573"
+    }
+  ]
+}
+explore:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received

@@ -100,6 +100,32 @@ export default function DataUploadPage() {
       const returnsData = XLSX.utils.sheet_to_json(returnsSheet);
       const auditData = XLSX.utils.sheet_to_json(auditSheet);
 
+      // Helper function to convert Excel dates
+      const convertExcelDate = (value: any): string => {
+        if (!value) return "";
+        
+        // If it's already a proper date string, return it
+        if (typeof value === 'string' && value.includes('-')) {
+          return value;
+        }
+        
+        // If it's an Excel serial date (number), convert it
+        if (typeof value === 'number') {
+          // Excel epoch starts at 1900-01-01, but treats 1900 as leap year incorrectly
+          // JavaScript Date uses 1970-01-01 epoch
+          const excelEpoch = new Date(1899, 11, 30); // December 30, 1899
+          const jsDate = new Date(excelEpoch.getTime() + value * 24 * 60 * 60 * 1000);
+          return jsDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+        }
+        
+        // If it's a Date object, format it
+        if (value instanceof Date) {
+          return value.toISOString().split('T')[0];
+        }
+        
+        return String(value);
+      };
+
       // Process Excel data directly with proper string conversion
       const companies = returnsData.map((row: any) => {
         const getValue = (key: string, altKey?: string) => {
@@ -115,8 +141,8 @@ export default function DataUploadPage() {
         return {
           corpName: String(row["Corp Name"] || row.corpName || ""),
           corpId: parseInt(String(row.ID || row.corpId || "0")),
-          periodStartDate: String(row["Period Start Date"] || row.periodStartDate || ""),
-          periodEndDate: String(row["Period End Date"] || row.periodEndDate || ""),
+          periodStartDate: convertExcelDate(row["Period Start Date"] || row.periodStartDate),
+          periodEndDate: convertExcelDate(row["Period End Date"] || row.periodEndDate),
           taxableIncome: getValue("Taxable Income", "taxableIncome"),
           salary: getNullableValue("Salary", "salary"),
           revenue: getNullableValue("Revenue", "revenue"),
@@ -126,10 +152,11 @@ export default function DataUploadPage() {
         };
       });
 
+      // Fix audit mapping: ID = company name, Audit Name = corpId, Audit Date = audit date
       const audits = auditData.map((row: any) => ({
         corpId: parseInt(String(row["Audit Name"] || row.corpId || "0")),
         corpName: String(row.ID || row.corpName || ""),
-        auditDate: String(row["Audit Date"] || row.auditDate || ""),
+        auditDate: convertExcelDate(row["Audit Date"] || row.auditDate),
       }));
 
       const data = { companies, audits };
