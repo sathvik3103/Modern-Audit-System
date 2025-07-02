@@ -146,21 +146,31 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
             </Badge>
           </div>
           <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                checked={rules.checkMissingSalary}
-                onCheckedChange={(checked) => updateRule('checkMissingSalary', !!checked)}
-                disabled={!rules.dataConsistencyEnabled}
-              />
-              <Label className="text-sm text-gray-700">Missing Salary Data</Label>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  checked={rules.checkMissingSalary}
+                  onCheckedChange={(checked) => updateRule('checkMissingSalary', !!checked)}
+                  disabled={!rules.dataConsistencyEnabled}
+                />
+                <Label className="text-sm text-gray-700">Missing Salary Data</Label>
+              </div>
+              <Badge variant="secondary" className={rules.checkMissingSalary && rules.dataConsistencyEnabled ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                {rules.checkMissingSalary && rules.dataConsistencyEnabled ? 'Active' : 'Inactive'}
+              </Badge>
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                checked={rules.checkMissingRevenue}
-                onCheckedChange={(checked) => updateRule('checkMissingRevenue', !!checked)}
-                disabled={!rules.dataConsistencyEnabled}
-              />
-              <Label className="text-sm text-gray-700">Missing Revenue Data</Label>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  checked={rules.checkMissingRevenue}
+                  onCheckedChange={(checked) => updateRule('checkMissingRevenue', !!checked)}
+                  disabled={!rules.dataConsistencyEnabled}
+                />
+                <Label className="text-sm text-gray-700">Missing Revenue Data</Label>
+              </div>
+              <Badge variant="secondary" className={rules.checkMissingRevenue && rules.dataConsistencyEnabled ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                {rules.checkMissingRevenue && rules.dataConsistencyEnabled ? 'Active' : 'Inactive'}
+              </Badge>
             </div>
           </div>
         </div>
