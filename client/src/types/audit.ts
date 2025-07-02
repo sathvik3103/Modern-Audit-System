@@ -70,5 +70,5 @@ export interface CompanyExplanation {
     yearsAgo: number;
   } | null;
   flags: AuditFlag[];
-  recommendation: string;
+  aiInsights: string;
 }

@@ -46,10 +46,10 @@ export default function AuditDashboard() {
 
   // Query explanation for selected company
   const { data: explanation, isLoading: explanationLoading } = useQuery<CompanyExplanation>({
-    queryKey: ['/api/audit/explanation', selectedCompany?.company.corpId],
+    queryKey: ['/api/audit/explanation', selectedCompany?.company.corpId, rules],
     queryFn: async () => {
       if (!selectedCompany) return null;
-      const response = await apiRequest('GET', `/api/audit/explanation/${selectedCompany.company.corpId}`);
+      const response = await apiRequest('POST', `/api/audit/explanation/${selectedCompany.company.corpId}`, rules);
       return response.json();
     },
     enabled: !!selectedCompany && explanationOpen,

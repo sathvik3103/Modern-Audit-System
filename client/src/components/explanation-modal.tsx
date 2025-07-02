@@ -1,9 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Calendar } from "lucide-react";
+import { AlertCircle, Calendar, Sparkles } from "lucide-react";
 import { FlaggedCompany, CompanyExplanation } from "@/types/audit";
-import { formatCurrency, formatPercentage } from "@/lib/audit-rules";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ExplanationModalProps {
@@ -24,7 +22,7 @@ export default function ExplanationModal({ open, onOpenChange, company, explanat
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-audit-blue" />
@@ -36,100 +34,67 @@ export default function ExplanationModal({ open, onOpenChange, company, explanat
           {loading ? (
             <div className="space-y-4">
               <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-32 w-full" />
               <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-16 w-full" />
             </div>
           ) : explanation ? (
             <>
-              {/* High Risk Factors */}
-              {explanation.flags.some(f => f.riskScore >= 20) && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-red-800 mb-2">High Risk Factors</h4>
-                  <ul className="text-sm text-red-700 space-y-1">
-                    {explanation.flags.filter(f => f.riskScore >= 20).map((flag, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="w-4 h-4 mr-2 mt-0.5 text-red-500">•</span>
-                        {flag.flagReason} 
-                        <span className="ml-auto text-xs font-medium bg-red-100 text-red-800 px-2 py-1 rounded">
-                          {flag.riskScore} pts
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+              {/* AI-Generated Insights */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="h-5 w-5 text-blue-600" />
+                  <h4 className="text-lg font-semibold text-blue-800">AI Analysis & Insights</h4>
                 </div>
-              )}
-
-              {/* Medium Risk Factors */}
-              {explanation.flags.some(f => f.riskScore >= 10 && f.riskScore < 20) && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-yellow-800 mb-2">Medium Risk Factors</h4>
-                  <ul className="text-sm text-yellow-700 space-y-1">
-                    {explanation.flags.filter(f => f.riskScore >= 10 && f.riskScore < 20).map((flag, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="w-4 h-4 mr-2 mt-0.5 text-yellow-500">•</span>
-                        {flag.flagReason}
-                        <span className="ml-auto text-xs font-medium bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                          {flag.riskScore} pts
-                        </span>
-                      </li>
-                    ))}
-                    <li>• Confectionary Sales Tax % of {formatPercentage(explanation.company.confectionarySalesTaxPercent)} is above average</li>
-                    <li>• Revenue to tax ratio suggests potential compliance issues</li>
-                  </ul>
-                </div>
-              )}
-
-              {/* Low Risk Factors */}
-              {explanation.flags.some(f => f.riskScore < 10) && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-blue-800 mb-2">Minor Observations</h4>
-                  <ul className="text-sm text-blue-700 space-y-1">
-                    {explanation.flags.filter(f => f.riskScore < 10).map((flag, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="w-4 h-4 mr-2 mt-0.5 text-blue-500">•</span>
-                        {flag.flagReason}
-                        <span className="ml-auto text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                          {flag.riskScore} pts
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Company Details */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-800 mb-2">Company Details</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">Bubblegum Tax:</span>
-                    <span className="ml-2 font-medium">{formatCurrency(explanation.company.bubblegumTax)}</span>
+                <div className="prose prose-sm prose-blue max-w-none">
+                  <div className="text-sm text-blue-900 whitespace-pre-wrap leading-relaxed">
+                    {explanation.aiInsights}
                   </div>
-                  <div>
-                    <span className="text-gray-600">Sales Tax %:</span>
-                    <span className="ml-2 font-medium">{formatPercentage(explanation.company.confectionarySalesTaxPercent)}</span>
-                  </div>
-                  {explanation.audit && (
-                    <>
-                      <div>
-                        <span className="text-gray-600">Last Audit:</span>
-                        <span className="ml-2 font-medium">{new Date(explanation.audit.auditDate).toLocaleDateString()}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Years Ago:</span>
-                        <span className="ml-2 font-medium">{explanation.audit.yearsAgo} years</span>
-                      </div>
-                    </>
-                  )}
                 </div>
               </div>
 
-              {/* AI Recommendation */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-blue-800 mb-2">AI Recommendation</h4>
-                <p className="text-sm text-blue-700">
-                  {explanation.recommendation}
-                </p>
+              {/* Quick Stats */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-800 mb-3">Quick Reference</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Corp ID:</span>
+                    <span className="ml-2 font-medium">{explanation.company.corpId}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Total Flags:</span>
+                    <span className="ml-2 font-medium">{explanation.flags.length}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Risk Score:</span>
+                    <span className="ml-2 font-medium">
+                      {explanation.flags.reduce((sum, flag) => sum + flag.riskScore, 0)} pts
+                    </span>
+                  </div>
+                  {explanation.company.bubblegumTax && (
+                    <div>
+                      <span className="text-gray-600">Bubblegum Tax:</span>
+                      <span className="ml-2 font-medium">
+                        ${parseFloat(explanation.company.bubblegumTax).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  {explanation.company.confectionarySalesTaxPercent && (
+                    <div>
+                      <span className="text-gray-600">Sales Tax %:</span>
+                      <span className="ml-2 font-medium">
+                        {explanation.company.confectionarySalesTaxPercent}%
+                      </span>
+                    </div>
+                  )}
+                  {explanation.audit && (
+                    <div>
+                      <span className="text-gray-600">Last Audit:</span>
+                      <span className="ml-2 font-medium">
+                        {explanation.audit.yearsAgo} years ago
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </>
           ) : (

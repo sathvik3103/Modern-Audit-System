@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { auditRulesSchema, type AuditRules, type FlaggedCompany, type InsertCompany, type InsertAudit } from "@shared/schema";
+import { generateAIInsights } from "./ai-service";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -323,10 +324,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get explanation for a specific company
-  app.get("/api/audit/explanation/:corpId", async (req, res) => {
+  // Get explanation for a specific company with AI insights
+  app.post("/api/audit/explanation/:corpId", async (req, res) => {
     try {
       const corpId = parseInt(req.params.corpId);
+      const auditRules = auditRulesSchema.parse(req.body);
+      
       const company = await storage.getCompany(corpId);
       
       if (!company) {
@@ -335,6 +338,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const audit = await storage.getAuditByCorpId(corpId);
       const flags = await storage.getFlagsByCorpId(corpId);
+      
+      let aiInsights = "";
+      
+      try {
+        // Generate AI insights
+        aiInsights = await generateAIInsights({
+          company: {
+            corpName: company.corpName,
+            corpId: company.corpId,
+            periodStartDate: company.periodStartDate.toISOString(),
+            periodEndDate: company.periodEndDate.toISOString(),
+            taxableIncome: company.taxableIncome,
+            salary: company.salary,
+            revenue: company.revenue,
+            amountTaxable: company.amountTaxable,
+            bubblegumTax: company.bubblegumTax,
+            confectionarySalesTaxPercent: company.confectionarySalesTaxPercent,
+          },
+          audit: audit ? {
+            auditDate: audit.auditDate.toISOString(),
+            yearsAgo: Math.floor((new Date().getTime() - audit.auditDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+          } : null,
+          flags: flags.map(f => ({
+            flagType: f.flagType,
+            flagReason: f.flagReason,
+            riskScore: f.riskScore,
+          })),
+          auditRules: {
+            bubblegumThreshold: auditRules.bubblegumThreshold,
+            bubblegumRiskScore: auditRules.bubblegumRiskScore,
+            auditYearsThreshold: auditRules.auditYearsThreshold,
+            auditRecencyRiskScore: auditRules.auditRecencyRiskScore,
+            salesTaxThreshold: auditRules.salesTaxThreshold,
+            salesTaxRiskScore: auditRules.salesTaxRiskScore,
+            missingSalaryRiskScore: auditRules.missingSalaryRiskScore,
+            missingRevenueRiskScore: auditRules.missingRevenueRiskScore,
+            dataConsistencyRiskScore: auditRules.dataConsistencyRiskScore,
+            highRiskThreshold: auditRules.highRiskThreshold,
+            mediumRiskThreshold: auditRules.mediumRiskThreshold,
+          }
+        });
+      } catch (aiError) {
+        console.error('AI insights generation failed:', aiError);
+        // Fallback to basic template
+        aiInsights = generateRecommendation(company, audit, flags);
+      }
       
       const explanation = {
         company: {
@@ -352,11 +401,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           flagReason: f.flagReason,
           riskScore: f.riskScore,
         })),
-        recommendation: generateRecommendation(company, audit, flags)
+        aiInsights: aiInsights
       };
       
       res.json(explanation);
     } catch (error) {
+      console.error('Explanation error:', error);
       res.status(500).json({ message: "Failed to get explanation" });
     }
   });
