@@ -109,6 +109,11 @@ The system implements a configurable rule engine that evaluates companies based 
 ```
 Changelog:
 - July 02, 2025. Initial setup
+- July 02, 2025. Enhanced export functionality with dual CSV/PDF options
+  * Added dropdown export menu with CSV and PDF format selection
+  * Implemented comprehensive CSV export with all financial data columns and human-readable flags
+  * Created professional PDF reports with dashboard-style layout and AI insights
+  * Used jsPDF for reliable PDF generation with proper formatting and multi-page support
 ```
 
 ## User Preferences
