@@ -41,29 +41,58 @@ export default function ExplanationModal({ open, onOpenChange, company, explanat
             </div>
           ) : explanation ? (
             <>
-              {/* Critical Risk Factors */}
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-red-800 mb-2">Critical Risk Factors</h4>
-                <ul className="text-sm text-red-700 space-y-1">
-                  {explanation.flags.filter(f => f.severity === 'high').map((flag, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="w-4 h-4 mr-2 mt-0.5 text-red-500">•</span>
-                      {flag.flagReason}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {/* High Risk Factors */}
+              {explanation.flags.some(f => f.riskScore >= 20) && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-red-800 mb-2">High Risk Factors</h4>
+                  <ul className="text-sm text-red-700 space-y-1">
+                    {explanation.flags.filter(f => f.riskScore >= 20).map((flag, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="w-4 h-4 mr-2 mt-0.5 text-red-500">•</span>
+                        {flag.flagReason} 
+                        <span className="ml-auto text-xs font-medium bg-red-100 text-red-800 px-2 py-1 rounded">
+                          {flag.riskScore} pts
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Medium Risk Factors */}
-              {explanation.flags.some(f => f.severity === 'medium') && (
+              {explanation.flags.some(f => f.riskScore >= 10 && f.riskScore < 20) && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-yellow-800 mb-2">Additional Observations</h4>
+                  <h4 className="text-sm font-medium text-yellow-800 mb-2">Medium Risk Factors</h4>
                   <ul className="text-sm text-yellow-700 space-y-1">
-                    {explanation.flags.filter(f => f.severity === 'medium').map((flag, index) => (
-                      <li key={index}>• {flag.flagReason}</li>
+                    {explanation.flags.filter(f => f.riskScore >= 10 && f.riskScore < 20).map((flag, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="w-4 h-4 mr-2 mt-0.5 text-yellow-500">•</span>
+                        {flag.flagReason}
+                        <span className="ml-auto text-xs font-medium bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                          {flag.riskScore} pts
+                        </span>
+                      </li>
                     ))}
                     <li>• Confectionary Sales Tax % of {formatPercentage(explanation.company.confectionarySalesTaxPercent)} is above average</li>
                     <li>• Revenue to tax ratio suggests potential compliance issues</li>
+                  </ul>
+                </div>
+              )}
+
+              {/* Low Risk Factors */}
+              {explanation.flags.some(f => f.riskScore < 10) && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-blue-800 mb-2">Minor Observations</h4>
+                  <ul className="text-sm text-blue-700 space-y-1">
+                    {explanation.flags.filter(f => f.riskScore < 10).map((flag, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="w-4 h-4 mr-2 mt-0.5 text-blue-500">•</span>
+                        {flag.flagReason}
+                        <span className="ml-auto text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          {flag.riskScore} pts
+                        </span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               )}

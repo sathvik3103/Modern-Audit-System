@@ -28,7 +28,7 @@ export const auditFlags = pgTable("audit_flags", {
   corpId: integer("corp_id").notNull(),
   flagType: text("flag_type").notNull(), // 'high_bubblegum_tax', 'old_audit', 'high_sales_tax', 'missing_data'
   flagReason: text("flag_reason").notNull(),
-  severity: text("severity").notNull(), // 'high', 'medium', 'low'
+  riskScore: integer("risk_score").notNull(), // User-defined risk score for this flag
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -94,7 +94,7 @@ export const flaggedCompanySchema = z.object({
   flags: z.array(z.object({
     flagType: z.string(),
     flagReason: z.string(),
-    severity: z.string(),
+    riskScore: z.number(),
   })),
   riskLevel: z.string(),
   riskScore: z.number(),

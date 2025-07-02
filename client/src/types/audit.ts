@@ -38,7 +38,7 @@ export interface AuditRecord {
 export interface AuditFlag {
   flagType: string;
   flagReason: string;
-  severity: 'high' | 'medium' | 'low';
+  riskScore: number;
 }
 
 export interface FlaggedCompany {

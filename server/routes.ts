@@ -68,7 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       for (const company of companies) {
         const audit = audits.find(a => a.corpId === company.corpId);
-        const flags: Array<{flagType: string, flagReason: string, severity: string}> = [];
+        const flags: Array<{flagType: string, flagReason: string, riskScore: number}> = [];
         let riskScore = 0;
         
         // Rule 1: Bubblegum Tax > threshold
@@ -79,7 +79,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             flags.push({
               flagType: "high_bubblegum_tax",
               flagReason: `Bubblegum Tax of $${bubblegumTax.toLocaleString()} exceeds threshold of $${rules.bubblegumThreshold.toLocaleString()} by ${percentOver}%`,
-              severity: bubblegumTax > rules.bubblegumThreshold * 2 ? "high" : "medium"
+              riskScore: rules.bubblegumRiskScore
             });
             riskScore += rules.bubblegumRiskScore;
           }
@@ -95,7 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             flagReason: audit ? 
               `Last audited ${yearsAgo} years ago, exceeding ${rules.auditYearsThreshold}-year requirement` :
               "Never been audited",
-            severity: !audit ? "high" : (yearsAgo !== null && yearsAgo > rules.auditYearsThreshold * 2) ? "high" : "medium"
+            riskScore: rules.auditRecencyRiskScore
           });
           riskScore += rules.auditRecencyRiskScore;
         }
@@ -107,7 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             flags.push({
               flagType: "high_sales_tax",
               flagReason: `Confectionary Sales Tax of ${salesTaxPercent}% exceeds threshold of ${rules.salesTaxThreshold}%`,
-              severity: salesTaxPercent > rules.salesTaxThreshold * 1.5 ? "medium" : "low"
+              riskScore: rules.salesTaxRiskScore
             });
             riskScore += rules.salesTaxRiskScore;
           }
@@ -119,7 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             flags.push({
               flagType: "missing_salary",
               flagReason: "Salary data is missing",
-              severity: "medium"
+              riskScore: rules.dataConsistencyRiskScore
             });
             riskScore += rules.dataConsistencyRiskScore;
           }
@@ -128,7 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             flags.push({
               flagType: "missing_revenue",
               flagReason: "Revenue data is missing", 
-              severity: "medium"
+              riskScore: rules.dataConsistencyRiskScore
             });
             riskScore += rules.dataConsistencyRiskScore;
           }
@@ -138,7 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             flags.push({
               flagType: "data_inconsistency",
               flagReason: company.salary ? "Salary provided but Revenue is missing" : "Revenue provided but Salary is missing",
-              severity: "medium"
+              riskScore: rules.dataConsistencyRiskScore
             });
             riskScore += rules.dataConsistencyRiskScore;
           }
@@ -156,7 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               corpId: company.corpId,
               flagType: flag.flagType,
               flagReason: flag.flagReason,
-              severity: flag.severity
+              riskScore: flag.riskScore
             });
           }
           
@@ -348,7 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         flags: flags.map(f => ({
           flagType: f.flagType,
           flagReason: f.flagReason,
-          severity: f.severity,
+          riskScore: f.riskScore,
         })),
         recommendation: generateRecommendation(company, audit, flags)
       };
@@ -393,14 +393,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 }
 
 function generateRecommendation(company: any, audit: any, flags: any[]): string {
-  const highSeverityFlags = flags.filter(f => f.severity === 'high').length;
-  const mediumSeverityFlags = flags.filter(f => f.severity === 'medium').length;
+  const totalRiskScore = flags.reduce((sum, flag) => sum + flag.riskScore, 0);
+  const highRiskFlags = flags.filter(f => f.riskScore >= 20).length;
+  const criticalFlags = flags.filter(f => f.riskScore >= 30).length;
   
-  if (highSeverityFlags >= 2) {
+  if (criticalFlags >= 2 || totalRiskScore >= 80) {
     return `Priority: Critical - Immediate audit recommended due to multiple high-risk factors. Focus investigation on bubblegum product line reporting and recent tax filings.`;
-  } else if (highSeverityFlags >= 1 || mediumSeverityFlags >= 2) {
+  } else if (criticalFlags >= 1 || highRiskFlags >= 2 || totalRiskScore >= 50) {
     return `Priority: High - Audit recommended within next quarter. Review financial reporting consistency and tax compliance procedures.`;
-  } else if (mediumSeverityFlags >= 1) {
+  } else if (highRiskFlags >= 1 || totalRiskScore >= 25) {
     return `Priority: Medium - Schedule audit within next 6 months. Monitor for ongoing compliance and data quality improvements.`;
   } else {
     return `Priority: Low - Standard audit cycle sufficient. Continue regular monitoring.`;
