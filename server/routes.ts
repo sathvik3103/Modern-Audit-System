@@ -411,31 +411,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Export flagged results
-  app.get("/api/audit/export", async (req, res) => {
+  // Export flagged results (Enhanced with comprehensive data)
+  app.post("/api/audit/export", async (req, res) => {
     try {
+      const rules = auditRulesSchema.parse(req.body);
+      
       const companies = await storage.getCompanies();
       const audits = await storage.getAudits();
-      const flags = await storage.getFlags();
+      const exportData: any[] = [];
       
-      const exportData = companies.map(company => {
+      const currentDate = new Date();
+      const auditThresholdDate = new Date();
+      auditThresholdDate.setFullYear(currentDate.getFullYear() - rules.auditYearsThreshold);
+      
+      for (const company of companies) {
         const audit = audits.find(a => a.corpId === company.corpId);
-        const companyFlags = flags.filter(f => f.corpId === company.corpId);
+        const flags: Array<{flagType: string, flagReason: string, riskScore: number}> = [];
+        let riskScore = 0;
         
-        return {
-          corpName: company.corpName,
-          corpId: company.corpId,
-          bubblegumTax: company.bubblegumTax,
-          salesTaxPercent: company.confectionarySalesTaxPercent,
-          lastAuditDate: audit?.auditDate.toISOString().split('T')[0] || 'Never',
-          flagCount: companyFlags.length,
-          flags: companyFlags.map(f => f.flagReason).join('; '),
-          riskLevel: companyFlags.length >= 3 ? 'High' : companyFlags.length >= 2 ? 'Medium' : companyFlags.length >= 1 ? 'Low' : 'None'
-        };
-      }).filter(c => c.flagCount > 0);
+        // Apply the same audit rules logic as in flagged endpoint
+        
+        // Rule 1: Bubblegum Tax > threshold
+        if (rules.bubblegumEnabled) {
+          const bubblegumTax = parseFloat(company.bubblegumTax || "0");
+          if (bubblegumTax > rules.bubblegumThreshold) {
+            flags.push({
+              flagType: "high_bubblegum_tax",
+              flagReason: `High Bubblegum Tax`,
+              riskScore: rules.bubblegumRiskScore
+            });
+            riskScore += rules.bubblegumRiskScore;
+          }
+        }
+        
+        // Rule 2: Not audited in past X years
+        if (rules.auditRecencyEnabled && (!audit || audit.auditDate < auditThresholdDate)) {
+          flags.push({
+            flagType: "old_audit",
+            flagReason: "Missing Recent Audit",
+            riskScore: rules.auditRecencyRiskScore
+          });
+          riskScore += rules.auditRecencyRiskScore;
+        }
+        
+        // Rule 3: Confectionary Sales Tax % > threshold
+        if (rules.salesTaxEnabled) {
+          const salesTaxPercent = parseFloat(company.confectionarySalesTaxPercent || "0");
+          if (salesTaxPercent > rules.salesTaxThreshold) {
+            flags.push({
+              flagType: "high_sales_tax",
+              flagReason: "High Sales Tax Rate",
+              riskScore: rules.salesTaxRiskScore
+            });
+            riskScore += rules.salesTaxRiskScore;
+          }
+        }
+        
+        // Rule 4: Missing Salary Data
+        if (rules.checkMissingSalary && !company.salary) {
+          flags.push({
+            flagType: "missing_salary",
+            flagReason: "Missing Salary Data",
+            riskScore: rules.missingSalaryRiskScore
+          });
+          riskScore += rules.missingSalaryRiskScore;
+        }
+        
+        // Rule 5: Missing Revenue Data  
+        if (rules.checkMissingRevenue && !company.revenue) {
+          flags.push({
+            flagType: "missing_revenue",
+            flagReason: "Missing Revenue Data", 
+            riskScore: rules.missingRevenueRiskScore
+          });
+          riskScore += rules.missingRevenueRiskScore;
+        }
+        
+        // Rule 6: Data consistency checks
+        if (rules.dataConsistencyEnabled) {
+          if ((company.salary && !company.revenue) || (!company.salary && company.revenue)) {
+            flags.push({
+              flagType: "data_inconsistency",
+              flagReason: "Data Consistency Issues",
+              riskScore: rules.dataConsistencyRiskScore
+            });
+            riskScore += rules.dataConsistencyRiskScore;
+          }
+        }
+        
+        // Only include flagged companies in export
+        if (flags.length > 0) {
+          // Determine risk level using custom thresholds
+          let riskLevel = "low";
+          if (riskScore >= rules.highRiskThreshold) riskLevel = "high";
+          else if (riskScore >= rules.mediumRiskThreshold) riskLevel = "medium";
+          
+          // Create human-readable flag descriptions
+          const flagDescriptions = flags.map(flag => flag.flagReason);
+          
+          exportData.push({
+            // Company identification
+            corpName: company.corpName,
+            corpId: company.corpId,
+            
+            // Financial period
+            periodStartDate: company.periodStartDate.toISOString().split('T')[0],
+            periodEndDate: company.periodEndDate.toISOString().split('T')[0],
+            
+            // Financial data
+            taxableIncome: company.taxableIncome,
+            salary: company.salary,
+            revenue: company.revenue,
+            amountTaxable: company.amountTaxable,
+            bubblegumTax: company.bubblegumTax,
+            confectionarySalesTaxPercent: company.confectionarySalesTaxPercent,
+            
+            // Audit information
+            lastAuditDate: audit?.auditDate ? audit.auditDate.toISOString().split('T')[0] : 'Never',
+            
+            // Risk assessment
+            riskLevel: riskLevel,
+            riskScore: riskScore,
+            flags: flagDescriptions.join(', '),
+            flagCount: flags.length
+          });
+        }
+      }
+      
+      // Sort by risk score descending
+      exportData.sort((a, b) => b.riskScore - a.riskScore);
       
       res.json(exportData);
     } catch (error) {
+      console.error('Export error:', error);
       res.status(500).json({ message: "Failed to export data" });
     }
   });

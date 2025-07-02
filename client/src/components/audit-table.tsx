@@ -2,20 +2,22 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Filter, Download, MoreVertical } from "lucide-react";
+import { Filter, MoreVertical } from "lucide-react";
 import { FlaggedCompany } from "@/types/audit";
 import { getRiskLevelColor, getFlagDisplayInfo, formatCurrency, formatPercentage, formatDate, getCompanyInitials, getGradientColor } from "@/lib/audit-rules";
 import { Skeleton } from "@/components/ui/skeleton";
+import ExportDropdown from "./export-dropdown";
 
 interface AuditTableProps {
   companies: FlaggedCompany[];
   loading: boolean;
   onShowExplanation: (company: FlaggedCompany) => void;
-  onExport: () => void;
+  onExportCsv: () => void;
+  onExportPdf: () => void;
   exportLoading: boolean;
 }
 
-export default function AuditTable({ companies, loading, onShowExplanation, onExport, exportLoading }: AuditTableProps) {
+export default function AuditTable({ companies, loading, onShowExplanation, onExportCsv, onExportPdf, exportLoading }: AuditTableProps) {
   if (loading) {
     return (
       <Card>
@@ -56,14 +58,11 @@ export default function AuditTable({ companies, loading, onShowExplanation, onEx
             <Button variant="ghost" size="icon">
               <Filter className="w-5 h-5" />
             </Button>
-            <Button 
-              onClick={onExport}
-              disabled={exportLoading}
-              className="bg-audit-blue hover:bg-blue-700"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              {exportLoading ? "Exporting..." : "Export Results"}
-            </Button>
+            <ExportDropdown
+              onExportCsv={onExportCsv}
+              onExportPdf={onExportPdf}
+              loading={exportLoading}
+            />
           </div>
         </div>
       </CardHeader>

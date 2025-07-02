@@ -10,7 +10,7 @@ import AuditTable from "@/components/audit-table";
 import ExplanationModal from "@/components/explanation-modal";
 import { AuditRules, FlaggedCompany, AuditSummary, CompanyExplanation } from "@/types/audit";
 import { defaultRules, calculateAuditSummary } from "@/lib/audit-rules";
-import { exportToCsv } from "@/lib/data-processor";
+import { exportToCsv, exportToPdf, ExportData } from "@/lib/export-utils";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function AuditDashboard() {
@@ -57,14 +57,47 @@ export default function AuditDashboard() {
 
 
 
-  // Export mutation
-  const exportMutation = useMutation({
+  // CSV Export mutation
+  const csvExportMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('GET', '/api/audit/export');
+      const response = await apiRequest('POST', '/api/audit/export', rules);
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data: ExportData[]) => {
       exportToCsv(data, `flagged-companies-${new Date().toISOString().split('T')[0]}.csv`);
+    },
+  });
+
+  // PDF Export mutation with AI insights
+  const pdfExportMutation = useMutation({
+    mutationFn: async () => {
+      const exportResponse = await apiRequest('POST', '/api/audit/export', rules);
+      const exportData: ExportData[] = await exportResponse.json();
+      
+      // Get AI insights for each company
+      const auditInsights: { [corpId: number]: string } = {};
+      
+      for (const company of exportData) {
+        try {
+          const insightResponse = await apiRequest('POST', `/api/audit/explanation/${company.corpId}`, rules);
+          const explanation = await insightResponse.json();
+          auditInsights[company.corpId] = explanation.aiInsights;
+        } catch (error) {
+          console.warn(`Failed to get AI insights for company ${company.corpId}`);
+          auditInsights[company.corpId] = "AI insights not available for this company at this time.";
+        }
+      }
+      
+      return { exportData, auditInsights };
+    },
+    onSuccess: async ({ exportData, auditInsights }) => {
+      const summary = calculateAuditSummary(flaggedCompanies);
+      await exportToPdf(
+        exportData, 
+        summary, 
+        `audit-report-${new Date().toISOString().split('T')[0]}.pdf`,
+        auditInsights
+      );
     },
   });
 
@@ -189,8 +222,9 @@ export default function AuditDashboard() {
               companies={flaggedCompanies}
               loading={flaggedLoading}
               onShowExplanation={handleShowExplanation}
-              onExport={() => exportMutation.mutate()}
-              exportLoading={exportMutation.isPending}
+              onExportCsv={() => csvExportMutation.mutate()}
+              onExportPdf={() => pdfExportMutation.mutate()}
+              exportLoading={csvExportMutation.isPending || pdfExportMutation.isPending}
             />
           </div>
         </main>
