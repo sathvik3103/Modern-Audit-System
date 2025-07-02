@@ -236,10 +236,14 @@ export default function DataExplorationPage() {
                       <TableRow>
                         <TableHead>Company</TableHead>
                         <TableHead>Corp ID</TableHead>
+                        <TableHead>Period Start</TableHead>
+                        <TableHead>Period End</TableHead>
+                        <TableHead>Taxable Income</TableHead>
+                        <TableHead>Salary</TableHead>
+                        <TableHead>Revenue</TableHead>
+                        <TableHead>Amount Taxable</TableHead>
                         <TableHead>Bubblegum Tax</TableHead>
                         <TableHead>Sales Tax %</TableHead>
-                        <TableHead>Revenue</TableHead>
-                        <TableHead>Salary</TableHead>
                         <TableHead>Last Audit</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -248,10 +252,14 @@ export default function DataExplorationPage() {
                         <TableRow key={item.id}>
                           <TableCell className="font-medium">{item.corpName}</TableCell>
                           <TableCell>{item.corpId}</TableCell>
+                          <TableCell>{formatDate(item.periodStartDate)}</TableCell>
+                          <TableCell>{formatDate(item.periodEndDate)}</TableCell>
+                          <TableCell>{formatCurrency(item.taxableIncome)}</TableCell>
+                          <TableCell>{formatCurrency(item.salary)}</TableCell>
+                          <TableCell>{formatCurrency(item.revenue)}</TableCell>
+                          <TableCell>{formatCurrency(item.amountTaxable)}</TableCell>
                           <TableCell>{formatCurrency(item.bubblegumTax)}</TableCell>
                           <TableCell>{formatPercentage(item.confectionarySalesTaxPercent)}</TableCell>
-                          <TableCell>{formatCurrency(item.revenue)}</TableCell>
-                          <TableCell>{formatCurrency(item.salary)}</TableCell>
                           <TableCell>{formatDate(item.auditDate)}</TableCell>
                         </TableRow>
                       ))}
@@ -286,9 +294,11 @@ export default function DataExplorationPage() {
                         <TableHead>Period Start</TableHead>
                         <TableHead>Period End</TableHead>
                         <TableHead>Taxable Income</TableHead>
-                        <TableHead>Revenue</TableHead>
                         <TableHead>Salary</TableHead>
+                        <TableHead>Revenue</TableHead>
+                        <TableHead>Amount Taxable</TableHead>
                         <TableHead>Bubblegum Tax</TableHead>
+                        <TableHead>Sales Tax %</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -299,9 +309,11 @@ export default function DataExplorationPage() {
                           <TableCell>{formatDate(company.periodStartDate)}</TableCell>
                           <TableCell>{formatDate(company.periodEndDate)}</TableCell>
                           <TableCell>{formatCurrency(company.taxableIncome)}</TableCell>
-                          <TableCell>{formatCurrency(company.revenue)}</TableCell>
                           <TableCell>{formatCurrency(company.salary)}</TableCell>
+                          <TableCell>{formatCurrency(company.revenue)}</TableCell>
+                          <TableCell>{formatCurrency(company.amountTaxable)}</TableCell>
                           <TableCell>{formatCurrency(company.bubblegumTax)}</TableCell>
+                          <TableCell>{formatPercentage(company.confectionarySalesTaxPercent)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

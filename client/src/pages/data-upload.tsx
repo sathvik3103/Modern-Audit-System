@@ -175,9 +175,6 @@ export default function DataUploadPage() {
 
       const data = { companies, audits };
       
-      // Debug logging
-      console.log("Processed data:", JSON.stringify(data, null, 2));
-      
       const validation = validateUploadData(data);
       
       if (!validation.valid) {
