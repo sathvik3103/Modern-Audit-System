@@ -61,62 +61,32 @@ export async function generateAIInsights(request: AIInsightRequest): Promise<str
     if (totalRiskScore >= request.auditRules.highRiskThreshold) riskLevel = "high";
     else if (totalRiskScore >= request.auditRules.mediumRiskThreshold) riskLevel = "medium";
 
-    const prompt = `You are an expert tax auditor analyzing a confectionery company's data for audit prioritization. Provide a comprehensive analysis explaining why this company was flagged.
+    const prompt = `Analyze ${request.company.corpName} (ID: ${request.company.corpId}) for audit prioritization. Be concise and specific.
 
-COMPANY DETAILS:
-- Name: ${request.company.corpName}
-- Corp ID: ${request.company.corpId}
-- Period: ${request.company.periodStartDate} to ${request.company.periodEndDate}
-- Taxable Income: ${request.company.taxableIncome || 'Not provided'}
-- Salary: ${request.company.salary || 'Not provided'}
-- Revenue: ${request.company.revenue || 'Not provided'}
-- Amount Taxable: ${request.company.amountTaxable || 'Not provided'}
-- Bubblegum Tax: ${request.company.bubblegumTax || 'Not provided'}
-- Confectionary Sales Tax %: ${request.company.confectionarySalesTaxPercent || 'Not provided'}
+DATA: Income: ${request.company.taxableIncome || 'N/A'}, Salary: ${request.company.salary || 'N/A'}, Revenue: ${request.company.revenue || 'N/A'}, Bubblegum Tax: ${request.company.bubblegumTax || 'N/A'}, Sales Tax: ${request.company.confectionarySalesTaxPercent || 'N/A'}%
 
-AUDIT HISTORY:
-${request.audit ? `- Last audited: ${request.audit.auditDate} (${request.audit.yearsAgo} years ago)` : '- Never been audited'}
+AUDIT: ${request.audit ? `Last audit ${request.audit.yearsAgo} years ago` : 'Never audited'}
 
-AUDIT RULES & THRESHOLDS:
-- Bubblegum Tax Threshold: $${request.auditRules.bubblegumThreshold.toLocaleString()} (Risk Score: ${request.auditRules.bubblegumRiskScore})
-- Audit Recency Threshold: ${request.auditRules.auditYearsThreshold} years (Risk Score: ${request.auditRules.auditRecencyRiskScore})
-- Sales Tax % Threshold: ${request.auditRules.salesTaxThreshold}% (Risk Score: ${request.auditRules.salesTaxRiskScore})
-- Missing Salary Risk Score: ${request.auditRules.missingSalaryRiskScore}
-- Missing Revenue Risk Score: ${request.auditRules.missingRevenueRiskScore}
-- Data Consistency Risk Score: ${request.auditRules.dataConsistencyRiskScore}
-- High Risk Threshold: ${request.auditRules.highRiskThreshold} points
-- Medium Risk Threshold: ${request.auditRules.mediumRiskThreshold} points
+FLAGS: ${request.flags.map(flag => flag.flagReason).join(', ')}
 
-SPECIFIC FLAGS TRIGGERED:
-${request.flags.map(flag => `- ${flag.flagReason} (${flag.riskScore} points)`).join('\n')}
+RISK: ${riskLevel.toUpperCase()} (${totalRiskScore} points)
 
-RISK ASSESSMENT:
-- Total Risk Score: ${totalRiskScore} points
-- Risk Level: ${riskLevel.toUpperCase()}
-
-Please provide a detailed analysis that:
-1. Explains each flag in context of the company's financial profile
-2. Assesses the significance of missing or unusual data patterns
-3. Evaluates the audit history and compliance risk
-4. Provides specific recommendations for audit focus areas
-5. Considers industry context for confectionery businesses
-
-Format your response as a clear, professional audit memo that explains the reasoning behind the flagging decision and provides actionable insights for the audit team.`;
+Provide a brief analysis focusing on key risks and specific actions needed. Keep response under 300 characters.`;
 
     const completion = await getOpenAIClient().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: "You are an experienced tax auditor specializing in corporate compliance for confectionery businesses. Provide clear, professional analysis based on the data provided."
+          content: "You are a tax auditor. Provide concise, actionable analysis in under 300 characters. Focus on key risks and specific actions needed."
         },
         {
           role: "user", 
           content: prompt
         }
       ],
-      max_tokens: 1000,
-      temperature: 0.3,
+      max_tokens: 80,
+      temperature: 0.4,
     });
 
     return completion.choices[0]?.message?.content || "Unable to generate AI insights at this time.";
