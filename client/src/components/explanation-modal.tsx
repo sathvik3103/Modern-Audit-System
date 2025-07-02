@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Calendar, Sparkles } from "lucide-react";
-import { FlaggedCompany, CompanyExplanation } from "@/types/audit";
+import { FlaggedCompany, CompanyExplanation, AuditRules } from "@/types/audit";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getFlagDisplayInfo } from "@/lib/audit-rules";
 
@@ -11,9 +11,10 @@ interface ExplanationModalProps {
   company: FlaggedCompany | null;
   explanation: CompanyExplanation | undefined;
   loading: boolean;
+  auditRules: AuditRules;
 }
 
-export default function ExplanationModal({ open, onOpenChange, company, explanation, loading }: ExplanationModalProps) {
+export default function ExplanationModal({ open, onOpenChange, company, explanation, loading, auditRules }: ExplanationModalProps) {
   if (!company) return null;
 
   const handleScheduleAudit = () => {
@@ -76,8 +77,8 @@ export default function ExplanationModal({ open, onOpenChange, company, explanat
                     <span className="ml-2 font-medium">
                       {(() => {
                         const totalRiskScore = explanation.flags.reduce((sum, flag) => sum + flag.riskScore, 0);
-                        if (totalRiskScore >= 60) return "High";
-                        if (totalRiskScore >= 30) return "Medium";
+                        if (totalRiskScore >= auditRules.highRiskThreshold) return "High";
+                        if (totalRiskScore >= auditRules.mediumRiskThreshold) return "Medium";
                         return "Low";
                       })()}
                     </span>

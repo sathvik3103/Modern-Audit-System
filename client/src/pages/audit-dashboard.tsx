@@ -203,6 +203,7 @@ export default function AuditDashboard() {
         company={selectedCompany}
         explanation={explanation}
         loading={explanationLoading}
+        auditRules={rules}
       />
     </div>
   );
