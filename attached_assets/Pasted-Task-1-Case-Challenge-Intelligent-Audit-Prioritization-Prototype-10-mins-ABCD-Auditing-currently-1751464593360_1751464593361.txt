@@ -1,0 +1,29 @@
+Task 1: Case Challenge: Intelligent Audit Prioritization Prototype (10 mins)
+ABCD Auditing currently selects corporate files in confectionary sector for review using a manual Excel-based
+process. Auditors apply heuristic rules to flag companies that may warrant further investigation.
+However, the process is manual, varies across reviewers, and lacks transparency. We want to modernize this
+approach with a system that can scale, explain its logic, and evolve over time.
+Rules:
+Dataset provided: Synthetic Data.xlsx
+Note: This is synthetic data - all values and company names are fictional and created for demonstration purposes
+only. No real-world information is used.
+Using the provided dataset (Synthetic Data.xlsx), apply the following business rules:
+1. If Bubblegum Tax greater than 50,000, flag the record
+2. If the corporation has not been audited in the past 3 years (based on Audit Date), flag it
+3. Confectionary Sales Tax % should be dynamically filterable - auditors should be able to adjust the
+threshold (e.g., > 5%, > 10%, > 15%), and the flagged results should update accordingly
+4. If salary is provided but revenue is blank (or vice versa), flag the inconsistency (Salary, Revenue)
+Your Goal:
+As part of ABCD audit modernization effort, design a solution that helps auditors:
+• Understand and trust the reasoning behind each selection
+• Extend the approach in the future (e.g., by learning patterns or enabling “Why this file?” explanations)
+10-Minute Presentation - must include:
+• How you flagged high-risk files based on the rule logic
+• How your solution could go beyond fixed rules to learn patterns or surface outliers - even without labeled
+outcomes. All we have is just the rules.
+• How auditors can clearly understand why a file was selected (no black-box models)
+• How your system could support explainable interaction - including natural-language Q&A (e.g., “Why this
+file?”) or auto-generating rationale summaries using GenAI, or a lightweight AI agent to walk through
+decisions.
+• How your solution could be taken from prototype to production - including how it supports audit review
+workflows, automated scoring, explainability, and AI ML/BI system integration
