@@ -75,53 +75,53 @@ export default function AuditTable({ companies, loading, onShowExplanation, onEx
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <Table>
+            <Table className="min-w-[1400px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Risk Level</TableHead>
-                  <TableHead>Flags</TableHead>
-                  <TableHead>Last Audit</TableHead>
-                  <TableHead>Period</TableHead>
-                  <TableHead>Taxable Income</TableHead>
-                  <TableHead>Salary</TableHead>
-                  <TableHead>Revenue</TableHead>
-                  <TableHead>Amount Taxable</TableHead>
-                  <TableHead>Bubblegum Tax</TableHead>
-                  <TableHead>Sales Tax %</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="min-w-[200px]">Company</TableHead>
+                  <TableHead className="min-w-[100px]">Risk Level</TableHead>
+                  <TableHead className="min-w-[180px]">Flags</TableHead>
+                  <TableHead className="min-w-[100px]">Last Audit</TableHead>
+                  <TableHead className="min-w-[120px]">Period</TableHead>
+                  <TableHead className="min-w-[120px]">Taxable Income</TableHead>
+                  <TableHead className="min-w-[100px]">Salary</TableHead>
+                  <TableHead className="min-w-[100px]">Revenue</TableHead>
+                  <TableHead className="min-w-[120px]">Amount Taxable</TableHead>
+                  <TableHead className="min-w-[120px]">Bubblegum Tax</TableHead>
+                  <TableHead className="min-w-[100px]">Sales Tax %</TableHead>
+                  <TableHead className="min-w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {companies.map((company, index) => (
                   <TableRow key={company.company.corpId} className="hover:bg-gray-50">
-                    <TableCell>
+                    <TableCell className="min-w-[200px]">
                       <div className="flex items-center">
-                        <div className={`w-8 h-8 bg-gradient-to-br ${getGradientColor(index)} rounded-full flex items-center justify-center`}>
+                        <div className={`w-8 h-8 bg-gradient-to-br ${getGradientColor(index)} rounded-full flex items-center justify-center flex-shrink-0`}>
                           <span className="text-white text-xs font-medium">
                             {getCompanyInitials(company.company.corpName)}
                           </span>
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{company.company.corpName}</div>
+                        <div className="ml-4 min-w-0">
+                          <div className="text-sm font-medium text-gray-900 truncate">{company.company.corpName}</div>
                           <div className="text-sm text-gray-500">ID: {company.company.corpId}</div>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="min-w-[100px]">
                       <Badge className={getRiskLevelColor(company.riskLevel)}>
                         {company.riskLevel} Risk
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
+                    <TableCell className="min-w-[180px]">
+                      <div className="flex flex-wrap gap-1 max-w-[180px]">
                         {company.flags.map((flag, flagIndex) => {
                           const flagInfo = getFlagDisplayInfo(flag.flagType);
                           return (
                             <Badge 
                               key={flagIndex} 
                               variant="secondary" 
-                              className={`text-xs ${flagInfo.color}`}
+                              className={`text-xs ${flagInfo.color} whitespace-nowrap`}
                             >
                               {flagInfo.label}
                             </Badge>
@@ -129,42 +129,42 @@ export default function AuditTable({ companies, loading, onShowExplanation, onEx
                         })}
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-gray-900">
+                    <TableCell className="text-sm text-gray-900 min-w-[100px]">
                       {formatDate(company.audit?.auditDate ?? null)}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-900">
+                    <TableCell className="text-sm text-gray-900 min-w-[120px]">
                       <div className="text-xs text-gray-500">
                         {formatDate(company.company.periodStartDate)} - {formatDate(company.company.periodEndDate)}
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-gray-900">
+                    <TableCell className="text-sm text-gray-900 min-w-[120px] text-right">
                       {formatCurrency(company.company.taxableIncome)}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-900">
+                    <TableCell className="text-sm text-gray-900 min-w-[100px] text-right">
                       {formatCurrency(company.company.salary)}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-900">
+                    <TableCell className="text-sm text-gray-900 min-w-[100px] text-right">
                       {formatCurrency(company.company.revenue)}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-900">
+                    <TableCell className="text-sm text-gray-900 min-w-[120px] text-right">
                       {formatCurrency(company.company.amountTaxable)}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-900">
+                    <TableCell className="text-sm text-gray-900 min-w-[120px] text-right">
                       {formatCurrency(company.company.bubblegumTax)}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-900">
+                    <TableCell className="text-sm text-gray-900 min-w-[100px] text-right">
                       {formatPercentage(company.company.confectionarySalesTaxPercent)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="min-w-[120px]">
                       <div className="flex items-center space-x-2">
                         <Button
                           variant="link"
-                          className="text-audit-blue hover:text-blue-700 p-0"
+                          className="text-audit-blue hover:text-blue-700 p-0 text-xs whitespace-nowrap"
                           onClick={() => onShowExplanation(company)}
                         >
                           Why flagged?
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                       </div>
