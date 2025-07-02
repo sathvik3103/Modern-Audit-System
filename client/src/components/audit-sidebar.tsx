@@ -189,31 +189,59 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
             </Badge>
           </div>
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  checked={rules.checkMissingSalary}
-                  onCheckedChange={(checked) => updateRule('checkMissingSalary', !!checked)}
-                  disabled={!rules.dataConsistencyEnabled}
-                />
-                <Label className="text-sm text-gray-700">Missing Salary Data</Label>
+            <div className="border rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={rules.checkMissingSalary}
+                    onCheckedChange={(checked) => updateRule('checkMissingSalary', !!checked)}
+                  />
+                  <Label className="text-sm text-gray-700">Missing Salary Data</Label>
+                </div>
+                <Badge variant="secondary" className={rules.checkMissingSalary ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                  {rules.checkMissingSalary ? 'Active' : 'Inactive'}
+                </Badge>
               </div>
-              <Badge variant="secondary" className={rules.checkMissingSalary && rules.dataConsistencyEnabled ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                {rules.checkMissingSalary && rules.dataConsistencyEnabled ? 'Active' : 'Inactive'}
-              </Badge>
+              <div className="flex items-center space-x-2 mt-2">
+                <Label className="text-xs text-gray-500 w-16">Risk Score:</Label>
+                <Input
+                  type="number"
+                  value={rules.missingSalaryRiskScore}
+                  onChange={(e) => updateRule('missingSalaryRiskScore', parseInt(e.target.value) || 0)}
+                  className="flex-1"
+                  min="0"
+                  max="100"
+                  disabled={!rules.checkMissingSalary}
+                />
+                <span className="text-xs text-gray-500">points</span>
+              </div>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  checked={rules.checkMissingRevenue}
-                  onCheckedChange={(checked) => updateRule('checkMissingRevenue', !!checked)}
-                  disabled={!rules.dataConsistencyEnabled}
-                />
-                <Label className="text-sm text-gray-700">Missing Revenue Data</Label>
+            <div className="border rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={rules.checkMissingRevenue}
+                    onCheckedChange={(checked) => updateRule('checkMissingRevenue', !!checked)}
+                  />
+                  <Label className="text-sm text-gray-700">Missing Revenue Data</Label>
+                </div>
+                <Badge variant="secondary" className={rules.checkMissingRevenue ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                  {rules.checkMissingRevenue ? 'Active' : 'Inactive'}
+                </Badge>
               </div>
-              <Badge variant="secondary" className={rules.checkMissingRevenue && rules.dataConsistencyEnabled ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                {rules.checkMissingRevenue && rules.dataConsistencyEnabled ? 'Active' : 'Inactive'}
-              </Badge>
+              <div className="flex items-center space-x-2 mt-2">
+                <Label className="text-xs text-gray-500 w-16">Risk Score:</Label>
+                <Input
+                  type="number"
+                  value={rules.missingRevenueRiskScore}
+                  onChange={(e) => updateRule('missingRevenueRiskScore', parseInt(e.target.value) || 0)}
+                  className="flex-1"
+                  min="0"
+                  max="100"
+                  disabled={!rules.checkMissingRevenue}
+                />
+                <span className="text-xs text-gray-500">points</span>
+              </div>
             </div>
             <div className="flex items-center space-x-2 mt-2">
               <Label className="text-xs text-gray-500 w-16">Risk Score:</Label>

@@ -11,7 +11,9 @@ export const defaultRules: AuditRules = {
   salesTaxEnabled: true,
   salesTaxRiskScore: 15,
   checkMissingSalary: true,
+  missingSalaryRiskScore: 12,
   checkMissingRevenue: true,
+  missingRevenueRiskScore: 12,
   dataConsistencyEnabled: true,
   dataConsistencyRiskScore: 10,
   // Risk level thresholds

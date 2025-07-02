@@ -9,7 +9,9 @@ export interface AuditRules {
   salesTaxEnabled: boolean;
   salesTaxRiskScore: number;
   checkMissingSalary: boolean;
-  checkMissingRevenue: boolean;
+  missingSalaryRiskScore: number;
+  checkMissingRevenue: boolean;  
+  missingRevenueRiskScore: number;
   dataConsistencyEnabled: boolean;
   dataConsistencyRiskScore: number;
   // Risk level thresholds

@@ -64,7 +64,9 @@ export const auditRulesSchema = z.object({
   salesTaxEnabled: z.boolean(),
   salesTaxRiskScore: z.number().min(0).max(100),
   checkMissingSalary: z.boolean(),
+  missingSalaryRiskScore: z.number().min(0).max(100),
   checkMissingRevenue: z.boolean(),
+  missingRevenueRiskScore: z.number().min(0).max(100),
   dataConsistencyEnabled: z.boolean(),
   dataConsistencyRiskScore: z.number().min(0).max(100),
   // Risk level thresholds

@@ -113,26 +113,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        // Rule 4: Data consistency checks
+        // Rule 4: Missing Salary Data
+        if (rules.checkMissingSalary && !company.salary) {
+          flags.push({
+            flagType: "missing_salary",
+            flagReason: "Salary data is missing",
+            riskScore: rules.missingSalaryRiskScore
+          });
+          riskScore += rules.missingSalaryRiskScore;
+        }
+        
+        // Rule 5: Missing Revenue Data  
+        if (rules.checkMissingRevenue && !company.revenue) {
+          flags.push({
+            flagType: "missing_revenue",
+            flagReason: "Revenue data is missing", 
+            riskScore: rules.missingRevenueRiskScore
+          });
+          riskScore += rules.missingRevenueRiskScore;
+        }
+        
+        // Rule 6: Data consistency checks
         if (rules.dataConsistencyEnabled) {
-          if (rules.checkMissingSalary && !company.salary) {
-            flags.push({
-              flagType: "missing_salary",
-              flagReason: "Salary data is missing",
-              riskScore: rules.dataConsistencyRiskScore
-            });
-            riskScore += rules.dataConsistencyRiskScore;
-          }
-          
-          if (rules.checkMissingRevenue && !company.revenue) {
-            flags.push({
-              flagType: "missing_revenue",
-              flagReason: "Revenue data is missing", 
-              riskScore: rules.dataConsistencyRiskScore
-            });
-            riskScore += rules.dataConsistencyRiskScore;
-          }
-          
           // Salary provided but revenue blank (or vice versa)
           if ((company.salary && !company.revenue) || (!company.salary && company.revenue)) {
             flags.push({
