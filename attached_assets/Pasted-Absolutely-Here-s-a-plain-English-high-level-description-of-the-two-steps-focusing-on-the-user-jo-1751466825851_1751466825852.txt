@@ -1,0 +1,42 @@
+Absolutely! Here’s a plain-English, high-level description of the two steps, focusing on the user journey and the underlying logic, without technical jargon or code references:
+
+---
+
+### **Step 1: Data Upload**
+
+1. **Welcome and Introduction:**  
+   When users first open the application, they are greeted with a welcoming page that explains the purpose of the tool and what it can do for them.
+
+2. **Prompt to Upload Data:**  
+   Users are asked to upload their own data file (such as a spreadsheet or CSV). This is the first action required before they can use any of the app’s features.
+
+3. **Data Storage:**  
+   Once the user uploads their file, the application reads and stores the data securely for use throughout the session. This ensures that the data is available for all subsequent steps.
+
+4. **Automatic Progression:**  
+   After a successful upload, the application automatically moves the user forward to the next stage, so they don’t have to figure out what to do next.
+
+---
+
+### **Step 2: Data Exploration**
+
+1. **Data Display:**  
+   The user is taken to a new page where they can see the data they just uploaded, presented in a clear and organized table.
+
+2. **Exploration Tools:**  
+   On this page, users can look through their data, scroll, and possibly use simple tools to sort, filter, or summarize the information. This helps them get a sense of what’s in their dataset and check that everything looks correct.
+
+3. **Access Control:**  
+   The application ensures that users can’t move on to more advanced features until they’ve uploaded their data. If they try to skip ahead, they’re gently reminded to upload their data first.
+
+---
+
+### **Summary of the Workflow**
+
+- The application guides users step-by-step, starting with a friendly introduction and a clear prompt to upload their data.
+- After uploading, users are seamlessly taken to a page where they can view and explore their data.
+- The app keeps things simple and intuitive, only unlocking further features once the data is in place, ensuring a smooth and logical flow.
+
+---
+
+**You can use this approach in any application where you want users to upload and review their data before moving on to more advanced analysis or features.**
