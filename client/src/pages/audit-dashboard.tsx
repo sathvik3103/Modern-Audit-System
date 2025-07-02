@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, AlertCircle, AlertTriangle, CheckCircle, FileText } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { AlertCircle, AlertTriangle, CheckCircle, FileText, ArrowLeft } from "lucide-react";
 import AuditSidebar from "@/components/audit-sidebar";
 import AuditTable from "@/components/audit-table";
 import ExplanationModal from "@/components/explanation-modal";
-import UploadDialog from "@/components/upload-dialog";
 import { AuditRules, FlaggedCompany, AuditSummary, CompanyExplanation } from "@/types/audit";
 import { defaultRules, calculateAuditSummary } from "@/lib/audit-rules";
 import { exportToCsv } from "@/lib/data-processor";
@@ -16,8 +17,23 @@ export default function AuditDashboard() {
   const [rules, setRules] = useState<AuditRules>(defaultRules);
   const [selectedCompany, setSelectedCompany] = useState<FlaggedCompany | null>(null);
   const [explanationOpen, setExplanationOpen] = useState(false);
-  const [uploadOpen, setUploadOpen] = useState(false);
+  const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+
+  // Check if data exists, redirect if not
+  const { data: companiesCheck = [], isLoading: checkLoading } = useQuery({
+    queryKey: ['/api/companies-raw'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/companies-raw');
+      return response.json();
+    },
+  });
+
+  useEffect(() => {
+    if (!checkLoading && companiesCheck.length === 0) {
+      setLocation("/");
+    }
+  }, [companiesCheck, checkLoading, setLocation]);
 
   // Query flagged companies
   const { data: flaggedCompanies = [], isLoading: flaggedLoading } = useQuery<FlaggedCompany[]>({
@@ -39,17 +55,7 @@ export default function AuditDashboard() {
     enabled: !!selectedCompany && explanationOpen,
   });
 
-  // Mutation for uploading data
-  const uploadMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiRequest('POST', '/api/upload', data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/audit/flagged'] });
-      setUploadOpen(false);
-    },
-  });
+
 
   // Export mutation
   const exportMutation = useMutation({
@@ -91,12 +97,16 @@ export default function AuditDashboard() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                Step 3 of 3
+              </Badge>
               <Button 
-                onClick={() => setUploadOpen(true)}
-                className="bg-audit-blue hover:bg-blue-700"
+                onClick={() => setLocation("/explore")}
+                variant="outline"
+                className="flex items-center gap-2"
               >
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Data
+                <ArrowLeft className="w-4 h-4" />
+                Back to Data
               </Button>
               <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
             </div>
@@ -193,13 +203,6 @@ export default function AuditDashboard() {
         company={selectedCompany}
         explanation={explanation}
         loading={explanationLoading}
-      />
-
-      <UploadDialog
-        open={uploadOpen}
-        onOpenChange={setUploadOpen}
-        onUpload={(data) => uploadMutation.mutate(data)}
-        loading={uploadMutation.isPending}
       />
     </div>
   );

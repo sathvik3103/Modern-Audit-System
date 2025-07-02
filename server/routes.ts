@@ -6,6 +6,26 @@ import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Get raw companies data for data exploration
+  app.get("/api/companies-raw", async (req, res) => {
+    try {
+      const companies = await storage.getCompanies();
+      res.json(companies);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch companies" });
+    }
+  });
+
+  // Get raw audits data for data exploration
+  app.get("/api/audits-raw", async (req, res) => {
+    try {
+      const audits = await storage.getAudits();
+      res.json(audits);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch audits" });
+    }
+  });
+  
   // Get all companies with audit data and flags
   app.get("/api/companies", async (req, res) => {
     try {
