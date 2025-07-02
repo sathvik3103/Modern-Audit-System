@@ -94,57 +94,111 @@ export async function exportToPdf(
   }
 
   console.log('Starting PDF export with data:', exportData.length, 'companies');
-
-  // Create PDF content HTML
-  const pdfContent = createPdfContent(exportData, summary, auditInsights);
-  
-  console.log('Generated PDF content length:', pdfContent.length);
-
-  // Create temporary element for PDF generation
-  const element = document.createElement('div');
-  element.innerHTML = pdfContent;
-  element.style.position = 'fixed';
-  element.style.left = '-9999px';
-  element.style.top = '0';
-  element.style.width = '800px';
-  element.style.background = 'white';
-  element.style.zIndex = '-1';
-  document.body.appendChild(element);
-
-  // Wait a moment for DOM to update
-  await new Promise(resolve => setTimeout(resolve, 100));
+  console.log('Summary data:', summary);
 
   try {
+    // Create a simpler test content first
+    const testContent = `
+      <div style="padding: 20px; font-family: Arial, sans-serif;">
+        <h1 style="color: #333;">ABCD Auditing Report</h1>
+        <p>Generated on: ${new Date().toLocaleDateString()}</p>
+        
+        <h2>Summary</h2>
+        <p>High Risk: ${summary.highRisk}</p>
+        <p>Medium Risk: ${summary.mediumRisk}</p>
+        <p>Low Risk: ${summary.lowRisk}</p>
+        <p>Total Files: ${summary.totalFiles}</p>
+        
+        <h2>Companies (${exportData.length} total)</h2>
+        ${exportData.slice(0, 3).map(company => `
+          <div style="border: 1px solid #ccc; padding: 10px; margin: 10px 0;">
+            <h3>${company.corpName}</h3>
+            <p>Corp ID: ${company.corpId}</p>
+            <p>Risk Level: ${company.riskLevel}</p>
+            <p>Flags: ${company.flags}</p>
+            ${auditInsights && auditInsights[company.corpId] ? `
+              <div style="background: #f0f8ff; padding: 10px; margin: 10px 0;">
+                <strong>AI Insights:</strong>
+                <p>${auditInsights[company.corpId]}</p>
+              </div>
+            ` : ''}
+          </div>
+        `).join('')}
+        
+        ${exportData.length > 3 ? `<p>... and ${exportData.length - 3} more companies</p>` : ''}
+      </div>
+    `;
+
+    console.log('Generated test content');
+
+    // Create temporary element for PDF generation
+    const element = document.createElement('div');
+    element.innerHTML = testContent;
+    element.style.position = 'fixed';
+    element.style.left = '-10000px';
+    element.style.top = '0';
+    element.style.width = '800px';
+    element.style.height = 'auto';
+    element.style.background = 'white';
+    element.style.zIndex = '-9999';
+    element.style.overflow = 'visible';
+    
+    document.body.appendChild(element);
+    
+    console.log('Element added to DOM, height:', element.offsetHeight);
+
+    // Wait for DOM update and fonts to load
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     const options = {
-      margin: [0.5, 0.5, 0.5, 0.5],
+      margin: 0.5,
       filename: filename,
       image: { 
         type: 'jpeg', 
-        quality: 0.98 
+        quality: 0.8
       },
       html2canvas: { 
         scale: 1,
         useCORS: true,
         allowTaint: true,
-        letterRendering: true,
-        logging: true
+        logging: false,
+        width: 800,
+        height: element.offsetHeight || 1000
       },
       jsPDF: { 
         unit: 'in', 
         format: 'a4', 
         orientation: 'portrait' 
-      },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      }
     };
 
-    console.log('Starting PDF generation...');
-    await html2pdf().set(options).from(element).save();
-    console.log('PDF generation completed');
+    console.log('Starting PDF generation with options:', options);
+    
+    // Use a different approach - get the PDF as blob first
+    const pdf = await html2pdf().set(options).from(element).toPdf().get('pdf');
+    
+    console.log('PDF generated, creating download');
+    
+    // Save the PDF
+    const blob = await html2pdf().set(options).from(element).output('blob');
+    
+    // Create download link
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    console.log('PDF download initiated');
+
+    document.body.removeChild(element);
   } catch (error) {
     console.error('PDF generation error:', error);
-    alert('Failed to generate PDF. Please try again.');
-  } finally {
-    document.body.removeChild(element);
+    alert(`Failed to generate PDF: ${error.message}`);
   }
 }
 

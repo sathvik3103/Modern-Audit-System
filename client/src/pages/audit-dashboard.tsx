@@ -11,6 +11,7 @@ import ExplanationModal from "@/components/explanation-modal";
 import { AuditRules, FlaggedCompany, AuditSummary, CompanyExplanation } from "@/types/audit";
 import { defaultRules, calculateAuditSummary } from "@/lib/audit-rules";
 import { exportToCsv, exportToPdf, ExportData } from "@/lib/export-utils";
+import { exportToPdfDirect } from "@/lib/pdf-alternative";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function AuditDashboard() {
@@ -92,7 +93,7 @@ export default function AuditDashboard() {
     },
     onSuccess: async ({ exportData, auditInsights }) => {
       const summary = calculateAuditSummary(flaggedCompanies);
-      await exportToPdf(
+      await exportToPdfDirect(
         exportData, 
         summary, 
         `audit-report-${new Date().toISOString().split('T')[0]}.pdf`,
