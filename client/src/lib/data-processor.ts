@@ -22,9 +22,10 @@ export function parseExcelData(data: any): UploadData {
   const companies = [];
   const audits = [];
 
-  // Process Returns data
-  if (data.Returns && Array.isArray(data.Returns)) {
-    for (const returnData of data.Returns) {
+  // Handle direct Excel data format (when called from Excel upload)
+  if (data.companies && data.audits) {
+    // Process companies/returns data
+    for (const returnData of data.companies) {
       companies.push({
         corpName: returnData["Corp Name"] || returnData.corpName,
         corpId: returnData.ID || returnData.corpId,
@@ -38,16 +39,45 @@ export function parseExcelData(data: any): UploadData {
         confectionarySalesTaxPercent: returnData["Confectionary Sales Tax %"] || returnData.confectionarySalesTaxPercent,
       });
     }
-  }
 
-  // Process Audit data
-  if (data.Audit && Array.isArray(data.Audit)) {
-    for (const auditData of data.Audit) {
+    // Process audits data
+    for (const auditData of data.audits) {
       audits.push({
         corpId: auditData["Audit Name"] || auditData.corpId,
         corpName: auditData.ID || auditData.corpName,
         auditDate: auditData["Audit Date"] || auditData.auditDate,
       });
+    }
+  }
+  // Handle legacy format (JSON with Returns/Audit keys)
+  else {
+    // Process Returns data
+    if (data.Returns && Array.isArray(data.Returns)) {
+      for (const returnData of data.Returns) {
+        companies.push({
+          corpName: returnData["Corp Name"] || returnData.corpName,
+          corpId: returnData.ID || returnData.corpId,
+          periodStartDate: returnData["Period Start Date"] || returnData.periodStartDate,
+          periodEndDate: returnData["Period End Date"] || returnData.periodEndDate,
+          taxableIncome: returnData["Taxable Income"] || returnData.taxableIncome,
+          salary: returnData.Salary !== undefined && returnData.Salary !== null ? returnData.Salary : returnData.salary,
+          revenue: returnData.Revenue !== undefined && returnData.Revenue !== null ? returnData.Revenue : returnData.revenue,
+          amountTaxable: returnData["Amount Taxable"] || returnData.amountTaxable,
+          bubblegumTax: returnData["Bubblegum Tax"] || returnData.bubblegumTax,
+          confectionarySalesTaxPercent: returnData["Confectionary Sales Tax %"] || returnData.confectionarySalesTaxPercent,
+        });
+      }
+    }
+
+    // Process Audit data
+    if (data.Audit && Array.isArray(data.Audit)) {
+      for (const auditData of data.Audit) {
+        audits.push({
+          corpId: auditData["Audit Name"] || auditData.corpId,
+          corpName: auditData.ID || auditData.corpName,
+          auditDate: auditData["Audit Date"] || auditData.auditDate,
+        });
+      }
     }
   }
 

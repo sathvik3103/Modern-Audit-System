@@ -190,18 +190,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const uploadSchema = z.object({
         companies: z.array(z.object({
           corpName: z.string(),
-          corpId: z.number(),
+          corpId: z.union([z.number(), z.string()]).transform(val => typeof val === 'string' ? parseInt(val) : val),
           periodStartDate: z.string(),
           periodEndDate: z.string(),
-          taxableIncome: z.number().optional(),
-          salary: z.number().optional().nullable(),
-          revenue: z.number().optional().nullable(),
-          amountTaxable: z.number().optional(),
-          bubblegumTax: z.number().optional(),
-          confectionarySalesTaxPercent: z.number().optional(),
+          taxableIncome: z.union([z.number(), z.string()]).optional(),
+          salary: z.union([z.number(), z.string()]).optional().nullable(),
+          revenue: z.union([z.number(), z.string()]).optional().nullable(),
+          amountTaxable: z.union([z.number(), z.string()]).optional(),
+          bubblegumTax: z.union([z.number(), z.string()]).optional(),
+          confectionarySalesTaxPercent: z.union([z.number(), z.string()]).optional(),
         })),
         audits: z.array(z.object({
-          corpId: z.number(),
+          corpId: z.union([z.number(), z.string()]).transform(val => typeof val === 'string' ? parseInt(val) : val),
           corpName: z.string(),
           auditDate: z.string(),
         })).optional(),
@@ -245,6 +245,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Upload error:", error);
       res.status(400).json({ message: "Invalid data format" });
+    }
+  });
+
+  // Load sample data endpoint
+  app.post('/api/load-sample', async (req, res) => {
+    try {
+      // Clear existing data
+      await storage.clearCompanies();
+      await storage.clearAudits();
+      await storage.clearFlags();
+
+      // Load predefined sample data
+      const sampleCompanies: InsertCompany[] = [
+        {
+          corpName: "Candy Corp",
+          corpId: 100000,
+          periodStartDate: new Date("2024-01-01"),
+          periodEndDate: new Date("2024-12-31"),
+          taxableIncome: "2500000",
+          salary: "150000",
+          revenue: "3000000",
+          amountTaxable: "2400000",
+          bubblegumTax: "75000",
+          confectionarySalesTaxPercent: "12"
+        },
+        {
+          corpName: "Sweet Dreams Inc",
+          corpId: 100001,
+          periodStartDate: new Date("2024-01-01"),
+          periodEndDate: new Date("2024-12-31"),
+          taxableIncome: "1800000",
+          salary: null,
+          revenue: "2200000",
+          amountTaxable: "1750000",
+          bubblegumTax: "45000",
+          confectionarySalesTaxPercent: "8"
+        },
+        {
+          corpName: "Chocolate Factory Ltd",
+          corpId: 100002,
+          periodStartDate: new Date("2024-01-01"),
+          periodEndDate: new Date("2024-12-31"),
+          taxableIncome: "3200000",
+          salary: "200000",
+          revenue: null,
+          amountTaxable: "3100000",
+          bubblegumTax: "95000",
+          confectionarySalesTaxPercent: "15"
+        }
+      ];
+
+      const sampleAudits: InsertAudit[] = [
+        { corpId: 100000, corpName: "Candy Corp", auditDate: new Date("2020-06-15") },
+        { corpId: 100002, corpName: "Chocolate Factory Ltd", auditDate: new Date("2022-03-10") }
+      ];
+
+      await storage.bulkCreateCompanies(sampleCompanies);
+      await storage.bulkCreateAudits(sampleAudits);
+
+      res.json({ message: 'Sample data loaded successfully', companies: sampleCompanies.length, audits: sampleAudits.length });
+    } catch (error) {
+      console.error('Load sample data error:', error);
+      res.status(500).json({ error: 'Failed to load sample data' });
     }
   });
 
