@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { Lightbulb } from "lucide-react";
 import { AuditRules } from "@/types/audit";
 
@@ -83,6 +84,8 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
           <p className="text-xs text-gray-500 mt-1">Companies with Bubblegum Tax above this amount will be flagged</p>
         </div>
 
+        <Separator className="my-4" />
+
         {/* Rule 2: Audit Recency */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
@@ -125,6 +128,8 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
           </div>
           <p className="text-xs text-gray-500 mt-1">Companies not audited within this timeframe will be flagged</p>
         </div>
+
+        <Separator className="my-4" />
 
         {/* Rule 3: Confectionary Sales Tax % */}
         <div className="mb-6">
@@ -173,6 +178,8 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
           </div>
           <p className="text-xs text-gray-500 mt-1">Companies above this sales tax percentage will be flagged</p>
         </div>
+
+        <Separator className="my-4" />
 
         {/* Rule 4: Data Consistency */}
         <div className="mb-6">
@@ -258,6 +265,8 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
             </div>
           </div>
         </div>
+
+        <Separator className="my-4" />
 
         {/* Risk Level Thresholds */}
         <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
