@@ -74,11 +74,12 @@ export default function AuditTable({ companies, loading, onShowExplanation, onEx
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <Table className="min-w-[1400px]">
+            <Table className="min-w-[1500px]">
               <TableHeader>
                 <TableRow>
                   <TableHead className="min-w-[200px]">Company</TableHead>
                   <TableHead className="min-w-[100px]">Risk Level</TableHead>
+                  <TableHead className="min-w-[100px]">Risk Score</TableHead>
                   <TableHead className="min-w-[180px]">Flags</TableHead>
                   <TableHead className="min-w-[100px]">Last Audit</TableHead>
                   <TableHead className="min-w-[120px]">Period</TableHead>
@@ -111,6 +112,14 @@ export default function AuditTable({ companies, loading, onShowExplanation, onEx
                       <Badge className={getRiskLevelColor(company.riskLevel)}>
                         {company.riskLevel} Risk
                       </Badge>
+                    </TableCell>
+                    <TableCell className="min-w-[100px]">
+                      <div className="text-sm font-medium text-gray-900 text-center">
+                        {company.riskScore}
+                      </div>
+                      <div className="text-xs text-gray-500 text-center">
+                        points
+                      </div>
                     </TableCell>
                     <TableCell className="min-w-[180px]">
                       <div className="flex flex-wrap gap-1 max-w-[180px]">
