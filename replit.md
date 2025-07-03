@@ -145,6 +145,15 @@ Changelog:
   * Synchronized export functionality (CSV/PDF) with applied table filters
   * Export now respects filtered view - only exports visible companies instead of all flagged companies
   * User confirmed filtering and export synchronization working perfectly
+- July 03, 2025. Enhanced ML Method Explanations and Transparency
+  * Added comprehensive "How It Works" expandable panel in ML Analysis Configuration
+  * Implemented detailed explanations for Isolation Forest and LOF algorithms with non-technical language
+  * Enhanced parameter explanations with practical examples and recommendations
+  * Created algorithm overview section explaining what each method detects and when to use them
+  * Added visual indicators and color coding for different ML concepts
+  * Enhanced Feature Importance section with business context and usage guidelines
+  * Improved LIME explanation modal with clear interpretation guides
+  * Made ML system more transparent and accessible to both technical and non-technical users
 ```
 
 ## User Preferences

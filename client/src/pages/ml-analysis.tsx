@@ -12,7 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Info, Brain, Download, ArrowLeft, Eye, MessageSquare, FileText, FileDown } from "lucide-react";
+import { Info, Brain, Download, ArrowLeft, Eye, MessageSquare, FileText, FileDown, ChevronDown, ChevronUp, HelpCircle } from "lucide-react";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatCurrency, formatPercentage } from "@/lib/audit-rules";
@@ -98,6 +98,7 @@ export default function MLAnalysisPage() {
   const [selectedAnomalies, setSelectedAnomalies] = useState<Set<number>>(new Set());
   const [bulkFeedbackOpen, setBulkFeedbackOpen] = useState(false);
   const [feedbackNotesOpen, setFeedbackNotesOpen] = useState(false);
+  const [explanationPanelOpen, setExplanationPanelOpen] = useState(false);
   const [currentFeedbackCorpId, setCurrentFeedbackCorpId] = useState<number | null>(null);
 
   // Check if we have data
@@ -823,15 +824,111 @@ export default function MLAnalysisPage() {
         {/* Configuration Panel */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Brain className="w-5 h-5 mr-2" />
-              ML Analysis Configuration
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Brain className="w-5 h-5 mr-2" />
+                ML Analysis Configuration
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setExplanationPanelOpen(!explanationPanelOpen)}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                <HelpCircle className="w-4 h-4 mr-2" />
+                How It Works
+                {explanationPanelOpen ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Expandable Explanation Panel */}
+            {explanationPanelOpen && (
+              <div className="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
+                <h3 className="text-lg font-semibold mb-4 text-blue-900">Understanding ML-Based Anomaly Detection</h3>
+                
+                <div className="space-y-6">
+                  {/* Overview */}
+                  <div>
+                    <h4 className="font-medium text-blue-800 mb-2">What This System Does</h4>
+                    <p className="text-sm text-blue-700 leading-relaxed">
+                      Our system uses two complementary machine learning algorithms to automatically identify companies with unusual financial patterns that may warrant audit attention. 
+                      Think of it as having two expert auditors with different specialties working together to spot potential issues.
+                    </p>
+                  </div>
+
+                  {/* The Two Methods */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-white p-4 rounded-lg border border-blue-100">
+                      <h4 className="font-medium text-purple-800 mb-2 flex items-center">
+                        <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                        Isolation Forest
+                      </h4>
+                      <p className="text-sm text-gray-700 mb-2">
+                        <strong>What it finds:</strong> Companies that are globally unusual compared to the entire dataset.
+                      </p>
+                      <p className="text-sm text-gray-700 mb-2">
+                        <strong>How it works:</strong> Imagine trying to isolate a company by asking yes/no questions about its financial data. 
+                        Unusual companies need fewer questions to isolate them from the group.
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        <strong>Best for:</strong> Finding companies with extreme values or rare combinations of financial metrics.
+                      </p>
+                    </div>
+                    
+                    <div className="bg-white p-4 rounded-lg border border-blue-100">
+                      <h4 className="font-medium text-green-800 mb-2 flex items-center">
+                        <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                        Local Outlier Factor (LOF)
+                      </h4>
+                      <p className="text-sm text-gray-700 mb-2">
+                        <strong>What it finds:</strong> Companies that are unusual within their local neighborhood of similar companies.
+                      </p>
+                      <p className="text-sm text-gray-700 mb-2">
+                        <strong>How it works:</strong> Compares each company's density (how similar it is to its neighbors) with the density of its neighbors. 
+                        Companies in sparse areas are flagged as anomalies.
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        <strong>Best for:</strong> Finding subtle patterns that might be normal globally but unusual within a specific group.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Combined Approach */}
+                  <div className="bg-white p-4 rounded-lg border border-blue-100">
+                    <h4 className="font-medium text-blue-800 mb-2">Combined Detection Power</h4>
+                    <p className="text-sm text-gray-700 mb-2">
+                      We run both algorithms and combine their scores to give you comprehensive anomaly detection:
+                    </p>
+                    <ul className="text-sm text-gray-700 space-y-1 ml-4">
+                      <li>• <strong>Isolation Forest</strong> catches companies with extreme or rare financial patterns</li>
+                      <li>• <strong>LOF</strong> catches companies that don't fit well with their peers</li>
+                      <li>• <strong>Combined Score</strong> gives you the best of both approaches</li>
+                    </ul>
+                  </div>
+
+                  {/* Feature Importance */}
+                  <div className="bg-white p-4 rounded-lg border border-blue-100">
+                    <h4 className="font-medium text-orange-800 mb-2">Feature Importance & LIME Explanations</h4>
+                    <p className="text-sm text-gray-700 mb-2">
+                      <strong>Feature Importance:</strong> Shows which financial metrics (like revenue, taxes, etc.) are most important for detecting anomalies across your entire dataset.
+                    </p>
+                    <p className="text-sm text-gray-700">
+                      <strong>LIME Explanations:</strong> For each flagged company, LIME explains exactly why it was flagged by showing how each financial metric contributed to the decision. 
+                      Think of it as a detailed audit trail showing the "reasoning" behind each detection.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Configuration Parameters */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <Label htmlFor="contamination">Contamination Rate</Label>
+                <Label htmlFor="contamination" className="flex items-center">
+                  Contamination Rate
+                  <Info className="w-3 h-3 ml-1 text-blue-500" />
+                </Label>
                 <Input
                   id="contamination"
                   type="number"
@@ -843,15 +940,25 @@ export default function MLAnalysisPage() {
                     ...parameters,
                     contamination: parseFloat(e.target.value)
                   })}
+                  className="mt-1"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  <Info className="w-3 h-3 inline mr-1" />
-                  Expected proportion of anomalies (0.05 = 5%, 0.1 = 10%, 0.2 = 20%). Lower values find fewer, more certain anomalies.
-                </p>
+                <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
+                  <p className="text-gray-700 mb-1">
+                    <strong>What it controls:</strong> How many companies you expect to be anomalies
+                  </p>
+                  <p className="text-gray-600">
+                    • <strong>0.05 (5%):</strong> Conservative - finds only the most suspicious companies<br/>
+                    • <strong>0.1 (10%):</strong> Balanced - good starting point for most audits<br/>
+                    • <strong>0.2 (20%):</strong> Aggressive - catches more potential issues but may include false positives
+                  </p>
+                </div>
               </div>
               
               <div>
-                <Label htmlFor="neighbors">Number of Neighbors</Label>
+                <Label htmlFor="neighbors" className="flex items-center">
+                  Number of Neighbors
+                  <Info className="w-3 h-3 ml-1 text-blue-500" />
+                </Label>
                 <Input
                   id="neighbors"
                   type="number"
@@ -862,15 +969,25 @@ export default function MLAnalysisPage() {
                     ...parameters,
                     n_neighbors: parseInt(e.target.value)
                   })}
+                  className="mt-1"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  <Info className="w-3 h-3 inline mr-1" />
-                  How many similar companies to compare each record against. Lower values (5-15) find local outliers, higher values (20-40) find global patterns.
-                </p>
+                <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
+                  <p className="text-gray-700 mb-1">
+                    <strong>What it controls:</strong> How many similar companies to compare each record against
+                  </p>
+                  <p className="text-gray-600">
+                    • <strong>5-15:</strong> Local focus - finds companies unusual within small peer groups<br/>
+                    • <strong>20-30:</strong> Balanced - considers broader context while staying local<br/>
+                    • <strong>35-50:</strong> Global focus - looks for patterns across larger groups
+                  </p>
+                </div>
               </div>
               
               <div>
-                <Label htmlFor="threshold">Anomaly Threshold</Label>
+                <Label htmlFor="threshold" className="flex items-center">
+                  Anomaly Threshold
+                  <Info className="w-3 h-3 ml-1 text-blue-500" />
+                </Label>
                 <Input
                   id="threshold"
                   type="number"
@@ -882,11 +999,18 @@ export default function MLAnalysisPage() {
                     ...parameters,
                     anomaly_threshold: parseFloat(e.target.value)
                   })}
+                  className="mt-1"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  <Info className="w-3 h-3 inline mr-1" />
-                  Minimum score to flag as anomaly. Typical range: 0.5 (catch more) to 1.5 (only most suspicious).
-                </p>
+                <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
+                  <p className="text-gray-700 mb-1">
+                    <strong>What it controls:</strong> Minimum "suspiciousness" score to flag a company
+                  </p>
+                  <p className="text-gray-600">
+                    • <strong>0.3-0.6:</strong> Sensitive - catches subtle anomalies but may include borderline cases<br/>
+                    • <strong>0.7-1.0:</strong> Balanced - focuses on clear anomalies with good confidence<br/>
+                    • <strong>1.1-1.5:</strong> Strict - only flags highly suspicious companies
+                  </p>
+                </div>
               </div>
             </div>
             
@@ -1075,13 +1199,28 @@ export default function MLAnalysisPage() {
                   <CardTitle>Feature Importance Analysis</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h3 className="text-lg font-semibold text-blue-900 mb-2">Understanding Feature Importance</h3>
-                    <p className="text-blue-800 text-sm leading-relaxed">
-                      This analysis shows how much each financial metric contributes to anomaly detection. 
-                      Higher percentages indicate features that are more influential in identifying unusual patterns. 
-                      Features with high importance should be prioritized during manual audit reviews.
-                    </p>
+                  <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                    <h3 className="text-lg font-semibold text-blue-900 mb-3 flex items-center">
+                      <Brain className="w-5 h-5 mr-2" />
+                      Understanding Feature Importance
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <h4 className="font-medium text-blue-800 mb-2">What This Shows</h4>
+                        <p className="text-blue-700 leading-relaxed">
+                          Feature importance reveals which financial metrics are most useful for spotting anomalies across your entire dataset. 
+                          Think of it as ranking which "red flags" are most reliable indicators of suspicious activity.
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-blue-800 mb-2">How to Use It</h4>
+                        <p className="text-blue-700 leading-relaxed">
+                          <strong>High importance (&gt;25%):</strong> Critical metrics to scrutinize during audits<br/>
+                          <strong>Medium importance (15-25%):</strong> Secondary factors worth examining<br/>
+                          <strong>Low importance (&lt;15%):</strong> Less predictive but still worth noting
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   
                   <div className="space-y-4">
@@ -1141,6 +1280,30 @@ export default function MLAnalysisPage() {
           
           {limeExplanation && (
             <div className="space-y-6">
+              {/* Explanation Overview */}
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-blue-900 mb-3 flex items-center">
+                  <Brain className="w-5 h-5 mr-2" />
+                  Understanding This Analysis
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <h4 className="font-medium text-blue-800 mb-2">What You're Seeing</h4>
+                    <p className="text-blue-700 leading-relaxed">
+                      This analysis shows why our ML system flagged this company as suspicious. Each financial metric 
+                      either increases (red) or decreases (green) the suspicion level.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-blue-800 mb-2">How to Read It</h4>
+                    <p className="text-blue-700 leading-relaxed">
+                      <span className="text-red-600 font-semibold">Positive (+)</span> contributions make the company look more suspicious, 
+                      while <span className="text-green-600 font-semibold">negative (-)</span> contributions suggest normal behavior.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* AI Summary Section */}
               {limeExplanation.ai_summary && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
