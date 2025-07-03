@@ -56,7 +56,16 @@ export function getFlagDisplayInfo(flagType: string) {
     data_inconsistency: { label: 'Data Inconsistency', color: 'bg-purple-100 text-purple-800' },
   };
 
-  return flagMap[flagType] || { label: flagType, color: 'bg-gray-100 text-gray-800' };
+  // Check if this is a known system flag
+  if (flagMap[flagType]) {
+    return flagMap[flagType];
+  }
+
+  // For custom rules, use the rule name directly as the label with custom styling
+  return { 
+    label: flagType, 
+    color: 'bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-800 border border-indigo-200' 
+  };
 }
 
 export function getRiskLevelColor(riskLevel: string): string {

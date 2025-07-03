@@ -154,6 +154,15 @@ Changelog:
   * Enhanced Feature Importance section with business context and usage guidelines
   * Improved LIME explanation modal with clear interpretation guides
   * Made ML system more transparent and accessible to both technical and non-technical users
+- July 03, 2025. Custom Business Rules Feature Implementation
+  * Implemented comprehensive custom rules system for Step 3 audit dashboard
+  * Created database schema with custom rules table and session-based storage
+  * Built custom rule builder with field selection, operator choices, and value input
+  * Developed custom rules management panel with create, edit, delete, and toggle functionality
+  * Enhanced rule evaluation engine to use user-provided rule names as flag types
+  * Improved flag display system with gradient styling and "Custom" badges for user-created rules
+  * Added session persistence for custom rules with automatic cache invalidation
+  * Custom rules now work seamlessly with existing audit flagging system and export functionality
 ```
 
 ## User Preferences

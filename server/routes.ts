@@ -815,7 +815,7 @@ function evaluateCustomRule(company: any, customRule: any): {flagType: string, f
       const threshold1 = parseFloat(customRule.value || '0');
       if (numValue1 > threshold1) {
         return {
-          flagType: `custom_${customRule.fieldName}_greater`,
+          flagType: customRule.ruleName,
           flagReason: `${customRule.ruleName}: ${customRule.fieldName} value (${fieldValue}) exceeds threshold (${customRule.value})`,
           riskScore: customRule.riskScore
         };
@@ -827,7 +827,7 @@ function evaluateCustomRule(company: any, customRule: any): {flagType: string, f
       const threshold2 = parseFloat(customRule.value || '0');
       if (numValue2 < threshold2) {
         return {
-          flagType: `custom_${customRule.fieldName}_less`,
+          flagType: customRule.ruleName,
           flagReason: `${customRule.ruleName}: ${customRule.fieldName} value (${fieldValue}) is below threshold (${customRule.value})`,
           riskScore: customRule.riskScore
         };
@@ -839,7 +839,7 @@ function evaluateCustomRule(company: any, customRule: any): {flagType: string, f
       const threshold3 = parseFloat(customRule.value || '0');
       if (numValue3 >= threshold3) {
         return {
-          flagType: `custom_${customRule.fieldName}_greater_equal`,
+          flagType: customRule.ruleName,
           flagReason: `${customRule.ruleName}: ${customRule.fieldName} value (${fieldValue}) meets or exceeds threshold (${customRule.value})`,
           riskScore: customRule.riskScore
         };
@@ -851,7 +851,7 @@ function evaluateCustomRule(company: any, customRule: any): {flagType: string, f
       const threshold4 = parseFloat(customRule.value || '0');
       if (numValue4 <= threshold4) {
         return {
-          flagType: `custom_${customRule.fieldName}_less_equal`,
+          flagType: customRule.ruleName,
           flagReason: `${customRule.ruleName}: ${customRule.fieldName} value (${fieldValue}) is at or below threshold (${customRule.value})`,
           riskScore: customRule.riskScore
         };
@@ -861,7 +861,7 @@ function evaluateCustomRule(company: any, customRule: any): {flagType: string, f
     case '==':
       if (fieldValue === customRule.value) {
         return {
-          flagType: `custom_${customRule.fieldName}_equal`,
+          flagType: customRule.ruleName,
           flagReason: `${customRule.ruleName}: ${customRule.fieldName} matches specified value (${customRule.value})`,
           riskScore: customRule.riskScore
         };
@@ -871,7 +871,7 @@ function evaluateCustomRule(company: any, customRule: any): {flagType: string, f
     case '!=':
       if (fieldValue !== customRule.value) {
         return {
-          flagType: `custom_${customRule.fieldName}_not_equal`,
+          flagType: customRule.ruleName,
           flagReason: `${customRule.ruleName}: ${customRule.fieldName} value (${fieldValue}) does not match expected value (${customRule.value})`,
           riskScore: customRule.riskScore
         };
@@ -881,7 +881,7 @@ function evaluateCustomRule(company: any, customRule: any): {flagType: string, f
     case 'contains':
       if (fieldValue && fieldValue.toString().toLowerCase().includes(customRule.value?.toLowerCase() || '')) {
         return {
-          flagType: `custom_${customRule.fieldName}_contains`,
+          flagType: customRule.ruleName,
           flagReason: `${customRule.ruleName}: ${customRule.fieldName} contains "${customRule.value}"`,
           riskScore: customRule.riskScore
         };
@@ -891,7 +891,7 @@ function evaluateCustomRule(company: any, customRule: any): {flagType: string, f
     case 'not_contains':
       if (fieldValue && !fieldValue.toString().toLowerCase().includes(customRule.value?.toLowerCase() || '')) {
         return {
-          flagType: `custom_${customRule.fieldName}_not_contains`,
+          flagType: customRule.ruleName,
           flagReason: `${customRule.ruleName}: ${customRule.fieldName} does not contain "${customRule.value}"`,
           riskScore: customRule.riskScore
         };
@@ -901,7 +901,7 @@ function evaluateCustomRule(company: any, customRule: any): {flagType: string, f
     case 'empty':
       if (!fieldValue || fieldValue.toString().trim() === '') {
         return {
-          flagType: `custom_${customRule.fieldName}_empty`,
+          flagType: customRule.ruleName,
           flagReason: `${customRule.ruleName}: ${customRule.fieldName} is empty or missing`,
           riskScore: customRule.riskScore
         };
@@ -911,7 +911,7 @@ function evaluateCustomRule(company: any, customRule: any): {flagType: string, f
     case 'not_empty':
       if (fieldValue && fieldValue.toString().trim() !== '') {
         return {
-          flagType: `custom_${customRule.fieldName}_not_empty`,
+          flagType: customRule.ruleName,
           flagReason: `${customRule.ruleName}: ${customRule.fieldName} has a value`,
           riskScore: customRule.riskScore
         };

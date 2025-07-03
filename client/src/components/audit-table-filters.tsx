@@ -82,7 +82,14 @@ export default function AuditTableFilters({
       'missing_revenue': 'Missing Revenue',
       'data_inconsistency': 'Data Inconsistency'
     };
-    return flagNames[flagType] || flagType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    
+    // Check if it's a known system flag
+    if (flagNames[flagType]) {
+      return flagNames[flagType];
+    }
+    
+    // For custom rules, use the rule name as-is (it's already user-friendly)
+    return flagType;
   };
 
   return (
@@ -189,8 +196,13 @@ export default function AuditTableFilters({
                       />
                       <Label 
                         htmlFor={`flag-${flagType}`} 
-                        className="text-sm cursor-pointer"
+                        className="text-sm cursor-pointer flex items-center gap-2"
                       >
+                        {!['high_bubblegum_tax', 'old_audit', 'high_sales_tax', 'missing_salary', 'missing_revenue', 'data_inconsistency'].includes(flagType) && (
+                          <span className="text-xs bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-1.5 py-0.5 rounded-full font-medium">
+                            Custom
+                          </span>
+                        )}
                         {getFlagDisplayName(flagType)}
                       </Label>
                     </div>
