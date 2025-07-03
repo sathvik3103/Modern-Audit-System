@@ -1,14 +1,10 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Lightbulb } from "lucide-react";
 import { AuditRules } from "@/types/audit";
 
 interface AuditSidebarProps {
@@ -18,7 +14,6 @@ interface AuditSidebarProps {
 }
 
 export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: AuditSidebarProps) {
-  const [aiQuestion, setAiQuestion] = useState("");
 
   const updateRule = <K extends keyof AuditRules>(key: K, value: AuditRules[K]) => {
     onRulesChange({ ...rules, [key]: value });
@@ -26,14 +21,6 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
 
   const handleSalesTaxChange = (value: number[]) => {
     updateRule('salesTaxThreshold', value[0]);
-  };
-
-  const handleAskAI = () => {
-    if (aiQuestion.trim()) {
-      // Simulate AI response
-      alert(`AI Assistant: Based on the current audit rules and flagged companies, here's my analysis: ${aiQuestion} - This would typically involve reviewing the specific business rules that triggered the flag and examining the company's historical compliance patterns.`);
-      setAiQuestion("");
-    }
   };
 
   return (
@@ -309,32 +296,7 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
           Apply Rules & Refresh
         </Button>
 
-        {/* AI Assistant Panel */}
-        <Card className="mt-8 bg-blue-50 border-blue-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center text-blue-700">
-              <Lightbulb className="w-5 h-5 mr-2" />
-              <span className="text-sm font-medium">AI Assistant</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-xs text-gray-600 mb-3">Ask questions about audit decisions or request explanations</p>
-            <Textarea
-              placeholder="Why was Toffee Co flagged?"
-              value={aiQuestion}
-              onChange={(e) => setAiQuestion(e.target.value)}
-              className="text-xs"
-              rows={2}
-            />
-            <Button 
-              onClick={handleAskAI}
-              className="mt-2 w-full bg-audit-blue hover:bg-blue-700 text-xs"
-              size="sm"
-            >
-              Ask AI
-            </Button>
-          </CardContent>
-        </Card>
+
       </div>
     </aside>
   );
