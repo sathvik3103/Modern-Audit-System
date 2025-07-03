@@ -103,15 +103,39 @@ class MLAnomalyDetector:
         
         return lof_anomalies, lof_scores
     
-    def setup_lime_explainer(self, X):
+    def setup_lime_explainer(self, X, explanation_type='discretized'):
         """Setup LIME explainer for interpretability"""
-        self.lime_explainer = LimeTabularExplainer(
-            X,
-            feature_names=self.feature_names,
-            mode='classification',
-            class_names=['Normal', 'Anomaly'],
-            discretize_continuous=True
-        )
+        if explanation_type == 'raw':
+            # Raw feature names without discretization
+            self.lime_explainer = LimeTabularExplainer(
+                X,
+                feature_names=self.feature_names,
+                mode='classification',
+                class_names=['Normal', 'Anomaly'],
+                discretize_continuous=False
+            )
+        elif explanation_type == 'percentile':
+            # Percentile-based feature names
+            percentile_names = []
+            for i, feature in enumerate(self.feature_names):
+                feature_values = X[:, i]
+                percentiles = np.percentile(feature_values, [25, 50, 75, 90, 95])
+                percentile_names.append(f"{feature}_percentile")
+            self.lime_explainer = LimeTabularExplainer(
+                X,
+                feature_names=percentile_names,
+                mode='classification',
+                class_names=['Normal', 'Anomaly'],
+                discretize_continuous=True
+            )
+        else:  # default: discretized
+            self.lime_explainer = LimeTabularExplainer(
+                X,
+                feature_names=self.feature_names,
+                mode='classification',
+                class_names=['Normal', 'Anomaly'],
+                discretize_continuous=True
+            )
     
     def explain_anomaly(self, record_index, anomaly_score, method='isolation_forest'):
         """Generate LIME explanation for a specific anomaly"""
