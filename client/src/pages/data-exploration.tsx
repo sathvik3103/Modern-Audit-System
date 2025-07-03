@@ -147,7 +147,7 @@ export default function DataExplorationPage() {
             </div>
             <div className="flex items-center space-x-4">
               <Badge variant="secondary" className="bg-green-100 text-green-800">
-                Step 2 of 3
+                Step 2 of 4
               </Badge>
             </div>
           </div>

@@ -218,33 +218,54 @@ export default function DataUploadPage() {
             </div>
           </div>
           <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-            Step 1 of 3
+            Step 1 of 4
           </Badge>
         </div>
       </div>
 
       {/* Progress Steps */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between max-w-2xl">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-audit-blue text-white rounded-full flex items-center justify-center text-sm font-medium">
-              1
+      <div className="bg-white border-b border-gray-200 px-6 py-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col items-center text-center flex-1">
+              <div className="w-10 h-10 bg-audit-blue text-white rounded-full flex items-center justify-center text-sm font-medium mb-2">
+                1
+              </div>
+              <span className="text-sm font-medium text-audit-blue max-w-32">Upload your Excel file with Returns and Audit sheets</span>
             </div>
-            <span className="ml-2 text-sm font-medium text-audit-blue">Upload your Excel file with Returns and Audit sheets</span>
-          </div>
-          <ArrowRight className="w-4 h-4 text-gray-400" />
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">
-              2
+            
+            <div className="flex-shrink-0 px-4">
+              <ArrowRight className="w-5 h-5 text-gray-400" />
             </div>
-            <span className="ml-2 text-sm text-gray-500">Review and verify your uploaded data</span>
-          </div>
-          <ArrowRight className="w-4 h-4 text-gray-400" />
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">
-              3
+            
+            <div className="flex flex-col items-center text-center flex-1">
+              <div className="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium mb-2">
+                2
+              </div>
+              <span className="text-sm text-gray-500 max-w-32">Review and verify your uploaded data</span>
             </div>
-            <span className="ml-2 text-sm text-gray-500">Configure rules and analyze audit priorities</span>
+            
+            <div className="flex-shrink-0 px-4">
+              <ArrowRight className="w-5 h-5 text-gray-400" />
+            </div>
+            
+            <div className="flex flex-col items-center text-center flex-1">
+              <div className="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium mb-2">
+                3
+              </div>
+              <span className="text-sm text-gray-500 max-w-32">Configure rules and analyze audit priorities</span>
+            </div>
+            
+            <div className="flex-shrink-0 px-4">
+              <ArrowRight className="w-5 h-5 text-gray-400" />
+            </div>
+            
+            <div className="flex flex-col items-center text-center flex-1">
+              <div className="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium mb-2">
+                4
+              </div>
+              <span className="text-sm text-gray-500 max-w-32">Advanced ML-based anomaly detection</span>
+            </div>
           </div>
         </div>
       </div>
