@@ -138,6 +138,13 @@ Changelog:
   * Step 4 (ML Analysis): Maintains ML parameters (contamination, neighbors, threshold) between sessions
   * Fixed infinite re-render issues with optimized useEffect dependencies
   * User confirmed perfect data consistency when switching between steps
+- July 03, 2025. Advanced Table Filtering with Export Synchronization
+  * Implemented comprehensive table filtering system for flagged corporate files
+  * Added multi-criteria filtering: risk levels (High/Medium/Low), risk score ranges, flag types, and audit status
+  * Created interactive filter popover with real-time updates and active filter counter
+  * Synchronized export functionality (CSV/PDF) with applied table filters
+  * Export now respects filtered view - only exports visible companies instead of all flagged companies
+  * User confirmed filtering and export synchronization working perfectly
 ```
 
 ## User Preferences
