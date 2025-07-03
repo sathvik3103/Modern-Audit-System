@@ -441,6 +441,15 @@ export default function MLAnalysisPage() {
                   <CardTitle>Feature Importance Analysis</CardTitle>
                 </CardHeader>
                 <CardContent>
+                  <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h3 className="text-lg font-semibold text-blue-900 mb-2">Understanding Feature Importance</h3>
+                    <p className="text-blue-800 text-sm leading-relaxed">
+                      This analysis shows how much each financial metric contributes to anomaly detection. 
+                      Higher percentages indicate features that are more influential in identifying unusual patterns. 
+                      Features with high importance should be prioritized during manual audit reviews.
+                    </p>
+                  </div>
+                  
                   <div className="space-y-4">
                     {Object.entries(mlResult.feature_importance).map(([feature, importance]) => {
                       const featureLabels: Record<string, string> = {
@@ -465,8 +474,6 @@ export default function MLAnalysisPage() {
                             </div>
                             <span className="text-lg font-bold text-blue-600">{(importance * 100).toFixed(1)}%</span>
                           </div>
-                          
-                          <p className="text-sm text-gray-600 mb-3">Overall importance of {displayName.toLowerCase()} in anomaly detection</p>
                           
                           <div className="flex items-center gap-3">
                             <div className="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
