@@ -154,32 +154,32 @@ export default function MLAnalysisPage() {
     
     const featureLabels: Record<string, { label: string; description: string; icon: string }> = {
       'taxableIncome': {
-        label: 'taxableIncome',
+        label: 'Taxable Income',
         description: 'Company\'s reported taxable income for the period',
         icon: '💰'
       },
       'salary': {
-        label: 'salary',
+        label: 'Salary',
         description: 'Total employee salary and payroll expenses',
         icon: '👥'
       },
       'revenue': {
-        label: 'revenue',
+        label: 'Revenue',
         description: 'Company\'s total revenue for the reporting period',
         icon: '📈'
       },
       'amountTaxable': {
-        label: 'amountTaxable',
+        label: 'Amount Taxable',
         description: 'Total amount subject to taxation',
         icon: '🏛️'
       },
       'bubblegumTax': {
-        label: 'bubblegumTax',
+        label: 'Bubblegum Tax',
         description: 'Specific tax on bubblegum confectionery products',
         icon: '🍬'
       },
       'confectionarySalesTaxPercent': {
-        label: 'confectionarySalesTaxPercent',
+        label: 'Confectionery Sales Tax Percent',
         description: 'Sales tax percentage applied to confectionery products',
         icon: '📊'
       }
