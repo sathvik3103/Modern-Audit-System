@@ -68,6 +68,7 @@ export default function MLAnalysisPage() {
   const [selectedAnomaly, setSelectedAnomaly] = useState<MLAnomaly | null>(null);
   const [limeExplanation, setLimeExplanation] = useState<LimeExplanation | null>(null);
   const [explanationOpen, setExplanationOpen] = useState(false);
+  const [explanationStyle, setExplanationStyle] = useState('thresholds');
 
   // Check if we have data
   const { data: companies = [] } = useQuery<any[]>({
@@ -115,7 +116,8 @@ export default function MLAnalysisPage() {
     mutationFn: async ({ recordIndex, anomalyScore }: { recordIndex: number; anomalyScore: number }) => {
       const response = await apiRequest('POST', `/api/ml/explain/${recordIndex}`, {
         anomaly_score: anomalyScore,
-        parameters: parameters
+        parameters: parameters,
+        explanation_style: explanationStyle
       });
       return response.json();
     },
@@ -456,11 +458,58 @@ export default function MLAnalysisPage() {
       <Dialog open={explanationOpen} onOpenChange={setExplanationOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>ML Insights - {selectedAnomaly?.corp_name}</DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle>ML Insights - {selectedAnomaly?.corp_name}</DialogTitle>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Explanation Style:</label>
+                <select 
+                  value={explanationStyle} 
+                  onChange={(e) => setExplanationStyle(e.target.value)}
+                  className="text-sm border border-gray-300 rounded px-2 py-1"
+                >
+                  <option value="thresholds">Business Thresholds</option>
+                  <option value="raw">Raw Features</option>
+                  <option value="percentiles">Percentile Ranking</option>
+                  <option value="quartiles">Quartile Analysis</option>
+                  <option value="std_dev">Standard Deviations</option>
+                </select>
+                {explanationStyle !== 'thresholds' && (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => {
+                      if (selectedAnomaly) {
+                        handleShowExplanation(selectedAnomaly);
+                      }
+                    }}
+                    disabled={explanationMutation.isPending}
+                  >
+                    Refresh
+                  </Button>
+                )}
+              </div>
+            </div>
           </DialogHeader>
           
           {limeExplanation && (
             <div className="space-y-6">
+              {/* Explanation Style Info */}
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 text-sm">
+                <div className="font-medium text-blue-800 mb-1">
+                  {explanationStyle === 'thresholds' && 'Business Thresholds'}
+                  {explanationStyle === 'raw' && 'Raw Features'}
+                  {explanationStyle === 'percentiles' && 'Percentile Ranking'}
+                  {explanationStyle === 'quartiles' && 'Quartile Analysis'}
+                  {explanationStyle === 'std_dev' && 'Standard Deviations'}
+                </div>
+                <div className="text-blue-700">
+                  {explanationStyle === 'thresholds' && 'Shows business-relevant thresholds like "bubblegumTax > $99,375"'}
+                  {explanationStyle === 'raw' && 'Shows simple feature names without thresholds or comparisons'}
+                  {explanationStyle === 'percentiles' && 'Shows where each value ranks compared to other companies (e.g., "95th percentile")'}
+                  {explanationStyle === 'quartiles' && 'Shows which quartile each value falls into (Q1-Low to Q4-High)'}
+                  {explanationStyle === 'std_dev' && 'Shows how many standard deviations each value is from the mean'}
+                </div>
+              </div>
               {/* Prediction Probabilities */}
               <div className="grid grid-cols-2 gap-4">
                 <Card>

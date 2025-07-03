@@ -112,9 +112,36 @@ class MLAnomalyDetector:
             class_names=['Normal', 'Anomaly'],
             discretize_continuous=True
         )
+        
+        # Also create alternative explainers for different explanation styles
+        self.lime_explainer_raw = LimeTabularExplainer(
+            X,
+            feature_names=self.feature_names,
+            mode='classification',
+            class_names=['Normal', 'Anomaly'],
+            discretize_continuous=False
+        )
+        
+        # Calculate statistics for alternative explanations
+        self.feature_stats = {}
+        for i, feature in enumerate(self.feature_names):
+            values = X[:, i]
+            self.feature_stats[feature] = {
+                'mean': np.mean(values),
+                'std': np.std(values),
+                'quartiles': np.percentile(values, [25, 50, 75]),
+                'percentiles': np.percentile(values, [10, 25, 50, 75, 90, 95, 99])
+            }
     
-    def explain_anomaly(self, record_index, anomaly_score, method='isolation_forest'):
-        """Generate LIME explanation for a specific anomaly"""
+    def explain_anomaly(self, record_index, anomaly_score, method='isolation_forest', explanation_style='thresholds'):
+        """Generate LIME explanation for a specific anomaly
+        
+        Args:
+            record_index: Index of the record to explain
+            anomaly_score: Anomaly score from the model
+            method: ML method used ('isolation_forest' or 'lof')
+            explanation_style: Style of explanation ('thresholds', 'raw', 'percentiles', 'quartiles', 'std_dev')
+        """
         if self.lime_explainer is None or self.data is None:
             return None
         
@@ -140,8 +167,14 @@ class MLAnomalyDetector:
                 probs[:, 1] = 0.7  # Anomaly probability
                 return probs
         
+        # Choose explainer based on style
+        if explanation_style == 'raw':
+            explainer = self.lime_explainer_raw
+        else:
+            explainer = self.lime_explainer
+        
         # Generate explanation
-        explanation = self.lime_explainer.explain_instance(
+        explanation = explainer.explain_instance(
             X_original,
             anomaly_predictor,
             num_features=len(self.feature_names)
@@ -149,6 +182,10 @@ class MLAnomalyDetector:
         
         # Extract feature contributions
         feature_contributions = explanation.as_list()
+        
+        # Transform feature names based on explanation style
+        if explanation_style != 'thresholds' and explanation_style != 'raw':
+            feature_contributions = self._transform_feature_names(feature_contributions, X_original, explanation_style)
         
         # Get prediction probabilities
         probabilities = anomaly_predictor(X_original.reshape(1, -1))[0]
@@ -175,6 +212,72 @@ class MLAnomalyDetector:
         }
         
         return explanation_data
+    
+    def _transform_feature_names(self, feature_contributions, X_original, explanation_style):
+        """Transform feature names based on explanation style"""
+        transformed = []
+        
+        for feature_name, contribution in feature_contributions:
+            # Extract base feature name
+            base_feature = feature_name.split(' ')[0] if ' ' in feature_name else feature_name
+            
+            if base_feature in self.feature_names:
+                feature_idx = self.feature_names.index(base_feature)
+                value = X_original[feature_idx]
+                stats = self.feature_stats[base_feature]
+                
+                if explanation_style == 'percentiles':
+                    # Find which percentile this value falls into
+                    percentiles = stats['percentiles']
+                    if value >= percentiles[6]:  # 99th percentile
+                        new_name = f"{base_feature} (99th percentile)"
+                    elif value >= percentiles[5]:  # 95th percentile
+                        new_name = f"{base_feature} (95th percentile)"
+                    elif value >= percentiles[4]:  # 90th percentile
+                        new_name = f"{base_feature} (90th percentile)"
+                    elif value >= percentiles[3]:  # 75th percentile
+                        new_name = f"{base_feature} (75th percentile)"
+                    elif value >= percentiles[2]:  # 50th percentile
+                        new_name = f"{base_feature} (median)"
+                    elif value >= percentiles[1]:  # 25th percentile
+                        new_name = f"{base_feature} (25th percentile)"
+                    else:
+                        new_name = f"{base_feature} (bottom 25%)"
+                
+                elif explanation_style == 'quartiles':
+                    # Quartile-based descriptions
+                    quartiles = stats['quartiles']
+                    if value >= quartiles[2]:  # Q4
+                        new_name = f"{base_feature} (Q4 - High)"
+                    elif value >= quartiles[1]:  # Q3
+                        new_name = f"{base_feature} (Q3 - Above Average)"
+                    elif value >= quartiles[0]:  # Q2
+                        new_name = f"{base_feature} (Q2 - Below Average)"
+                    else:  # Q1
+                        new_name = f"{base_feature} (Q1 - Low)"
+                
+                elif explanation_style == 'std_dev':
+                    # Standard deviation descriptions
+                    std_deviations = (value - stats['mean']) / stats['std'] if stats['std'] > 0 else 0
+                    if std_deviations >= 2:
+                        new_name = f"{base_feature} (+{std_deviations:.1f} std)"
+                    elif std_deviations >= 1:
+                        new_name = f"{base_feature} (+{std_deviations:.1f} std)"
+                    elif std_deviations >= 0:
+                        new_name = f"{base_feature} (+{std_deviations:.1f} std)"
+                    elif std_deviations >= -1:
+                        new_name = f"{base_feature} ({std_deviations:.1f} std)"
+                    else:
+                        new_name = f"{base_feature} ({std_deviations:.1f} std)"
+                
+                else:
+                    new_name = feature_name
+                
+                transformed.append((new_name, contribution))
+            else:
+                transformed.append((feature_name, contribution))
+        
+        return transformed
     
     def calculate_feature_importance(self, anomalies, scores):
         """Calculate overall feature importance across all anomalies"""
@@ -302,6 +405,7 @@ def main():
         record_index = input_data.get('record_index', 0)
         anomaly_score = input_data.get('anomaly_score', 0.5)
         params = input_data.get('parameters', {})
+        explanation_style = input_data.get('explanation_style', 'thresholds')
         
         detector = MLAnomalyDetector()
         
@@ -315,7 +419,7 @@ def main():
             detector.setup_lime_explainer(X_original)
             
             # Generate explanation
-            explanation = detector.explain_anomaly(record_index, anomaly_score)
+            explanation = detector.explain_anomaly(record_index, anomaly_score, method='isolation_forest', explanation_style=explanation_style)
             
             if explanation:
                 print(json.dumps({

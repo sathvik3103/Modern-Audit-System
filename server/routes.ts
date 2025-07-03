@@ -637,7 +637,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         data: joinedData,
         record_index: recordIndex,
         anomaly_score: anomalyScore,
-        parameters
+        parameters,
+        explanation_style: req.body.explanation_style || 'thresholds'
       };
       
       const result = await runPythonMLService('explain', inputData);
