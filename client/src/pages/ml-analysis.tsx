@@ -377,16 +377,12 @@ export default function MLAnalysisPage() {
         const data = await response.json();
         if (data.success && data.explanation) {
           explanations.set(anomaly.corp_id, data.explanation);
-          console.log(`Fetched explanation for ${anomaly.corp_name}:`, data.explanation);
-        } else {
-          console.warn(`No explanation data for ${anomaly.corp_name}:`, data);
         }
       } catch (error) {
         console.error(`Failed to fetch explanation for ${anomaly.corp_name}:`, error);
       }
     }
-    
-    console.log(`Total explanations fetched: ${explanations.size} out of ${mlResult.anomalies.length} anomalies`);
+
 
     const doc = new jsPDF();
     const currentDate = new Date().toLocaleString();
@@ -613,7 +609,6 @@ export default function MLAnalysisPage() {
       
       // LIME Explanation
       const explanation = explanations.get(anomaly.corp_id);
-      console.log(`Processing explanation for ${anomaly.corp_name} (ID: ${anomaly.corp_id}):`, explanation);
       
       if (explanation) {
         currentY += 8;
