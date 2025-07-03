@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, AlertTriangle, CheckCircle, FileText, ArrowLeft } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle, FileText, ArrowLeft, Brain } from "lucide-react";
 import AuditSidebar from "@/components/audit-sidebar";
 import AuditTable from "@/components/audit-table";
 import ExplanationModal from "@/components/explanation-modal";
@@ -132,7 +132,7 @@ export default function AuditDashboard() {
             </div>
             <div className="flex items-center space-x-4">
               <Badge variant="secondary" className="bg-green-100 text-green-800">
-                Step 3 of 3
+                Step 3 of 4
               </Badge>
               <Button 
                 onClick={() => setLocation("/explore")}
@@ -227,6 +227,32 @@ export default function AuditDashboard() {
               onExportPdf={() => pdfExportMutation.mutate()}
               exportLoading={csvExportMutation.isPending || pdfExportMutation.isPending}
             />
+
+            {/* Proceed to Advanced Analysis */}
+            {flaggedCompanies.length > 0 && (
+              <Card className="mt-6">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        Ready for Advanced Analysis?
+                      </h3>
+                      <p className="text-gray-600">
+                        Use machine learning to discover hidden patterns and anomalies that traditional rules might miss.
+                        Step 4 provides AI-powered insights with explainable results.
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={() => setLocation("/ml-analysis")}
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3"
+                    >
+                      <Brain className="w-5 h-5 mr-2" />
+                      Start ML Analysis
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </main>
       </div>

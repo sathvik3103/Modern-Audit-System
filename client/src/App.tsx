@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import DataUploadPage from "@/pages/data-upload";
 import DataExplorationPage from "@/pages/data-exploration";
 import AuditDashboard from "@/pages/audit-dashboard";
+import MLAnalysisPage from "@/pages/ml-analysis";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -14,6 +15,7 @@ function Router() {
       <Route path="/" component={DataUploadPage} />
       <Route path="/explore" component={DataExplorationPage} />
       <Route path="/audit" component={AuditDashboard} />
+      <Route path="/ml-analysis" component={MLAnalysisPage} />
       <Route component={NotFound} />
     </Switch>
   );

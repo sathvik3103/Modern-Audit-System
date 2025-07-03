@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import { auditRulesSchema, type AuditRules, type FlaggedCompany, type InsertCompany, type InsertAudit } from "@shared/schema";
 import { generateAIInsights } from "./ai-service";
 import { z } from "zod";
+import { spawn } from "child_process";
+import path from "path";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -548,6 +550,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ML Analysis Routes
+  app.post("/api/ml/analyze", async (req, res) => {
+    try {
+      // Parse parameters
+      const parameters = req.body.parameters || {};
+      const contamination = parameters.contamination || 0.1;
+      const nNeighbors = parameters.n_neighbors || 20;
+      const anomalyThreshold = parameters.anomaly_threshold || 0.5;
+      
+      // Get joined data (companies + audits)
+      const companies = await storage.getCompanies();
+      const audits = await storage.getAudits();
+      
+      // Create joined dataset
+      const joinedData = companies.map(company => {
+        const audit = audits.find(a => a.corpId === company.corpId);
+        return {
+          id: company.id,
+          corpName: company.corpName,
+          corpId: company.corpId,
+          periodStartDate: company.periodStartDate.toISOString(),
+          periodEndDate: company.periodEndDate.toISOString(),
+          taxableIncome: company.taxableIncome,
+          salary: company.salary,
+          revenue: company.revenue,
+          amountTaxable: company.amountTaxable,
+          bubblegumTax: company.bubblegumTax,
+          confectionarySalesTaxPercent: company.confectionarySalesTaxPercent,
+          auditDate: audit ? audit.auditDate.toISOString() : null
+        };
+      });
+      
+      // Prepare input for Python ML service
+      const inputData = {
+        data: joinedData,
+        parameters: {
+          contamination,
+          n_neighbors: nNeighbors,
+          anomaly_threshold: anomalyThreshold
+        }
+      };
+      
+      // Run ML analysis
+      const result = await runPythonMLService('analyze', inputData);
+      
+      res.json(result);
+    } catch (error) {
+      console.error('ML Analysis error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : "ML analysis failed" 
+      });
+    }
+  });
+
+  app.post("/api/ml/explain/:recordIndex", async (req, res) => {
+    try {
+      const recordIndex = parseInt(req.params.recordIndex);
+      const anomalyScore = req.body.anomaly_score || 0.5;
+      const parameters = req.body.parameters || {};
+      
+      // Get joined data
+      const companies = await storage.getCompanies();
+      const audits = await storage.getAudits();
+      
+      const joinedData = companies.map(company => {
+        const audit = audits.find(a => a.corpId === company.corpId);
+        return {
+          id: company.id,
+          corpName: company.corpName,
+          corpId: company.corpId,
+          periodStartDate: company.periodStartDate.toISOString(),
+          periodEndDate: company.periodEndDate.toISOString(),
+          taxableIncome: company.taxableIncome,
+          salary: company.salary,
+          revenue: company.revenue,
+          amountTaxable: company.amountTaxable,
+          bubblegumTax: company.bubblegumTax,
+          confectionarySalesTaxPercent: company.confectionarySalesTaxPercent,
+          auditDate: audit ? audit.auditDate.toISOString() : null
+        };
+      });
+      
+      const inputData = {
+        data: joinedData,
+        record_index: recordIndex,
+        anomaly_score: anomalyScore,
+        parameters
+      };
+      
+      const result = await runPythonMLService('explain', inputData);
+      
+      res.json(result);
+    } catch (error) {
+      console.error('ML Explanation error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : "ML explanation failed" 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
@@ -566,4 +670,40 @@ function generateRecommendation(company: any, audit: any, flags: any[]): string 
   } else {
     return `Priority: Low - Standard audit cycle sufficient. Continue regular monitoring.`;
   }
+}
+
+// ML Analysis endpoints helper function
+async function runPythonMLService(command: string, inputData: any): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const pythonScript = path.join(process.cwd(), 'server', 'ml_service.py');
+    const pythonProcess = spawn('python3', [pythonScript, command]);
+    
+    let stdout = '';
+    let stderr = '';
+    
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+    
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+    
+    pythonProcess.on('close', (code) => {
+      if (code === 0) {
+        try {
+          const result = JSON.parse(stdout);
+          resolve(result);
+        } catch (error) {
+          reject(new Error(`Failed to parse Python output: ${error}`));
+        }
+      } else {
+        reject(new Error(`Python process failed with code ${code}: ${stderr}`));
+      }
+    });
+    
+    // Send input data to Python process
+    pythonProcess.stdin.write(JSON.stringify(inputData));
+    pythonProcess.stdin.end();
+  });
 }

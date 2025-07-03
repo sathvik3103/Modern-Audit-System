@@ -114,6 +114,14 @@ Changelog:
   * Implemented comprehensive CSV export with all financial data columns and human-readable flags
   * Created professional PDF reports with dashboard-style layout and AI insights
   * Used jsPDF for reliable PDF generation with proper formatting and multi-page support
+- July 03, 2025. Implemented Step 4: ML-Based Anomaly Detection
+  * Added unsupervised machine learning using Isolation Forest and Local Outlier Factor
+  * Implemented LIME explanations for model interpretability 
+  * Created Python ML service with subprocess integration
+  * Added configurable ML parameters with user-friendly explanations
+  * Built comprehensive ML analysis page with feature importance and LIME explanations
+  * Added navigation from Step 3 (Rule-based audit) to Step 4 (ML analysis)
+  * Supports separate CSV export for ML findings
 ```
 
 ## User Preferences
