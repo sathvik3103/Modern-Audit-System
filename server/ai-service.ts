@@ -53,6 +53,79 @@ export interface AIInsightRequest {
   };
 }
 
+export interface MLExplanationRequest {
+  company: {
+    corpName: string;
+    corpId: number;
+  };
+  anomalyScore: number;
+  predictionProbabilities: {
+    normal: number;
+    anomaly: number;
+  };
+  featureContributions: Array<{
+    display_name: string;
+    formatted_value: string;
+    contribution: number;
+    context: string;
+  }>;
+}
+
+export async function generateMLExplanationSummary(request: MLExplanationRequest): Promise<string> {
+  try {
+    const client = getOpenAIClient();
+    
+    // Prepare feature contributions summary
+    const topContributions = request.featureContributions.slice(0, 5);
+    const suspiciousFeatures = topContributions.filter(f => f.contribution > 0);
+    const normalFeatures = topContributions.filter(f => f.contribution < 0);
+    
+    const prompt = `You are an expert financial auditor analyzing why a company was flagged as anomalous by machine learning.
+
+Company: ${request.company.corpName} (ID: ${request.company.corpId})
+Anomaly Probability: ${(request.predictionProbabilities.anomaly * 100).toFixed(1)}%
+Normal Probability: ${(request.predictionProbabilities.normal * 100).toFixed(1)}%
+
+Key Contributing Factors:
+${suspiciousFeatures.length > 0 ? `
+Suspicious Indicators:
+${suspiciousFeatures.map(f => `- ${f.display_name}: ${f.formatted_value} (${f.context})`).join('\n')}
+` : ''}
+${normalFeatures.length > 0 ? `
+Normal Indicators:
+${normalFeatures.map(f => `- ${f.display_name}: ${f.formatted_value} (${f.context})`).join('\n')}
+` : ''}
+
+Provide a clear, professional summary (2-3 sentences) explaining:
+1. Why this company was flagged as anomalous
+2. The main areas of concern for auditors
+3. What auditors should investigate first
+
+Write in simple, non-technical language that both technical and non-technical users can understand. Focus on actionable insights for audit prioritization.`;
+
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert financial auditor providing clear, actionable insights for audit prioritization. Keep responses concise and professional.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 200,
+      temperature: 0.3
+    });
+
+    return response.choices[0]?.message?.content || 'Unable to generate explanation summary.';
+  } catch (error) {
+    console.error('Error generating ML explanation summary:', error);
+    return 'ML analysis complete. Review the feature contributions below for detailed insights.';
+  }
+}
+
 export async function generateAIInsights(request: AIInsightRequest): Promise<string> {
   try {
     const totalRiskScore = request.flags.reduce((sum, flag) => sum + flag.riskScore, 0);

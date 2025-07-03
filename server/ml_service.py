@@ -25,6 +25,16 @@ class MLAnomalyDetector:
         self.data = None
         self.scaled_data = None
         
+        # Business-friendly feature mapping
+        self.feature_display_names = {
+            'taxableIncome': 'Taxable Income',
+            'salary': 'Total Payroll',
+            'revenue': 'Total Revenue',
+            'amountTaxable': 'Amount Taxable',
+            'bubblegumTax': 'Bubblegum Tax',
+            'confectionarySalesTaxPercent': 'Sales Tax Rate'
+        }
+        
     def preprocess_data(self, raw_data):
         """Preprocess the data for ML analysis"""
         # Convert to DataFrame
@@ -183,12 +193,34 @@ class MLAnomalyDetector:
         # Extract feature contributions
         feature_contributions = explanation.as_list()
         
-        # Transform feature names based on explanation style
-        if explanation_style != 'thresholds' and explanation_style != 'raw':
-            feature_contributions = self._transform_feature_names(feature_contributions, X_original, explanation_style)
-        
         # Get prediction probabilities
         probabilities = anomaly_predictor(X_original.reshape(1, -1))[0]
+        
+        # Process feature contributions with business context
+        processed_contributions = []
+        for contrib in feature_contributions:
+            # Extract base feature name
+            base_feature = contrib[0].split(' ')[0] if ' ' in contrib[0] else contrib[0]
+            
+            if base_feature in self.feature_names:
+                feature_idx = self.feature_names.index(base_feature)
+                value = float(X_original[feature_idx])
+                contribution = float(contrib[1])
+                
+                # Generate business context
+                context = self._generate_business_context(base_feature, value, contribution)
+                
+                processed_contributions.append({
+                    'feature': base_feature,
+                    'display_name': context['display_name'],
+                    'formatted_value': context['formatted_value'],
+                    'contribution': contribution,
+                    'context': context['context'],
+                    'raw_value': value
+                })
+        
+        # Sort by absolute contribution (most impactful first)
+        processed_contributions.sort(key=lambda x: abs(x['contribution']), reverse=True)
         
         # Format explanation
         explanation_data = {
@@ -198,20 +230,45 @@ class MLAnomalyDetector:
                 'normal': float(probabilities[0]),
                 'anomaly': float(probabilities[1])
             },
-            'feature_contributions': [
-                {
-                    'feature': contrib[0],
-                    'contribution': float(contrib[1]),
-                    'value': float(X_original[self.feature_names.index(contrib[0].split(' ')[0])]) if contrib[0].split(' ')[0] in self.feature_names else 0.0
-                }
-                for contrib in feature_contributions
-            ],
+            'feature_contributions': processed_contributions,
             'feature_values': {
                 feature: float(X_original[i]) for i, feature in enumerate(self.feature_names)
             }
         }
         
         return explanation_data
+    
+    def _generate_business_context(self, feature_name, value, contribution):
+        """Generate business context explanation for a feature"""
+        display_name = self.feature_display_names.get(feature_name, feature_name)
+        
+        # Format value based on feature type
+        if feature_name in ['taxableIncome', 'salary', 'revenue', 'amountTaxable', 'bubblegumTax']:
+            formatted_value = f"${value:,.2f}" if value > 0 else "Not reported"
+        elif feature_name == 'confectionarySalesTaxPercent':
+            formatted_value = f"{value:.1f}%" if value > 0 else "Not reported"
+        else:
+            formatted_value = str(value)
+        
+        # Generate simple contextual explanation
+        if contribution > 0:
+            # Positive contribution means more suspicious
+            if value == 0:
+                context = f"Missing {display_name.lower()} data raises audit concerns"
+            else:
+                context = f"This {display_name.lower()} value contributes to anomaly detection"
+        else:
+            # Negative contribution means more normal
+            if value == 0:
+                context = f"Missing {display_name.lower()} data is consistent with some companies"
+            else:
+                context = f"This {display_name.lower()} value appears typical"
+        
+        return {
+            'display_name': display_name,
+            'formatted_value': formatted_value,
+            'context': context
+        }
     
     def _transform_feature_names(self, feature_contributions, X_original, explanation_style):
         """Transform feature names based on explanation style"""

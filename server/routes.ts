@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { auditRulesSchema, type AuditRules, type FlaggedCompany, type InsertCompany, type InsertAudit } from "@shared/schema";
-import { generateAIInsights } from "./ai-service";
+import { generateAIInsights, generateMLExplanationSummary } from "./ai-service";
 import { z } from "zod";
 import { spawn } from "child_process";
 import path from "path";
@@ -642,6 +642,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       const result = await runPythonMLService('explain', inputData);
+      
+      // Generate AI summary if ML explanation was successful
+      if (result.success && result.explanation) {
+        try {
+          const company = joinedData[recordIndex];
+          const aiSummary = await generateMLExplanationSummary({
+            company: {
+              corpName: company.corpName,
+              corpId: company.corpId,
+            },
+            anomalyScore: result.explanation.anomaly_score,
+            predictionProbabilities: result.explanation.prediction_probabilities,
+            featureContributions: result.explanation.feature_contributions
+          });
+          
+          result.explanation.ai_summary = aiSummary;
+        } catch (aiError) {
+          console.error('AI Summary generation error:', aiError);
+          result.explanation.ai_summary = 'ML analysis complete. Review the feature contributions below for detailed insights.';
+        }
+      }
       
       res.json(result);
     } catch (error) {
