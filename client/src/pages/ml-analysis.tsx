@@ -507,15 +507,36 @@ export default function MLAnalysisPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {Object.entries(mlResult.feature_importance).map(([feature, importance]) => (
-                      <div key={feature} className="flex items-center space-x-4">
-                        <div className="w-40 text-sm font-medium">{feature}</div>
-                        <div className="flex-1">
-                          <Progress value={importance * 100} className="h-3" />
+                    {Object.entries(mlResult.feature_importance).map(([feature, importance]) => {
+                      const humanReadableFeature = formatFeatureName(feature);
+                      const importanceLevel = importance > 0.25 ? 'High' : importance > 0.15 ? 'Medium' : 'Low';
+                      
+                      return (
+                        <div key={feature} className="p-4 rounded-lg border bg-gradient-to-r from-blue-50 to-white hover:shadow-sm transition-all">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <h4 className="font-medium text-gray-900">{humanReadableFeature.label}</h4>
+                              <Badge variant="outline" className="text-xs">
+                                {importanceLevel} Impact
+                              </Badge>
+                            </div>
+                            <span className="text-lg font-bold text-blue-600">{(importance * 100).toFixed(1)}%</span>
+                          </div>
+                          
+                          <p className="text-sm text-gray-600 mb-3">{humanReadableFeature.description}</p>
+                          
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
+                              <div 
+                                className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-700"
+                                style={{ width: `${importance * 100}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-xs text-gray-500 font-medium w-12">{(importance * 100).toFixed(1)}%</span>
+                          </div>
                         </div>
-                        <div className="w-16 text-sm text-gray-600">{(importance * 100).toFixed(1)}%</div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
