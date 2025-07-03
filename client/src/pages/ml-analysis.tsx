@@ -147,6 +147,76 @@ export default function MLAnalysisPage() {
     });
   };
 
+  // Helper function to format feature names for better readability
+  const formatFeatureName = (featureName: string) => {
+    // Extract base feature name and additional info
+    const baseFeature = featureName.split(' ')[0].split('<')[0].split('>')[0];
+    
+    const featureLabels: Record<string, { label: string; description: string; icon: string }> = {
+      'taxableIncome': {
+        label: 'Taxable Income',
+        description: 'Company\'s reported taxable income for the period',
+        icon: '💰'
+      },
+      'salary': {
+        label: 'Salary Expenses',
+        description: 'Total employee salary and payroll expenses',
+        icon: '👥'
+      },
+      'revenue': {
+        label: 'Total Revenue',
+        description: 'Company\'s total revenue for the reporting period',
+        icon: '📈'
+      },
+      'amountTaxable': {
+        label: 'Amount Subject to Tax',
+        description: 'Total amount subject to taxation',
+        icon: '🏛️'
+      },
+      'bubblegumTax': {
+        label: 'Bubblegum Product Tax',
+        description: 'Specific tax on bubblegum confectionery products',
+        icon: '🍬'
+      },
+      'confectionarySalesTaxPercent': {
+        label: 'Confectionery Sales Tax Rate',
+        description: 'Sales tax percentage applied to confectionery products',
+        icon: '📊'
+      }
+    };
+
+    const baseInfo = featureLabels[baseFeature] || {
+      label: baseFeature,
+      description: `Analysis of ${baseFeature}`,
+      icon: '📋'
+    };
+
+    // Add quartile/percentile/threshold info to the description
+    let enhancedDescription = baseInfo.description;
+    if (featureName.includes('Q1')) enhancedDescription += ' (Low quartile - bottom 25%)';
+    else if (featureName.includes('Q2')) enhancedDescription += ' (Below average - 25th-50th percentile)';
+    else if (featureName.includes('Q3')) enhancedDescription += ' (Above average - 50th-75th percentile)';
+    else if (featureName.includes('Q4')) enhancedDescription += ' (High quartile - top 25%)';
+    else if (featureName.includes('percentile')) enhancedDescription += ' (Ranked against other companies)';
+    else if (featureName.includes('std')) enhancedDescription += ' (Standard deviations from average)';
+    else if (featureName.includes('>') || featureName.includes('<')) enhancedDescription += ' (Threshold-based analysis)';
+
+    return {
+      label: `${baseInfo.icon} ${baseInfo.label}`,
+      description: enhancedDescription,
+      baseFeature: baseFeature
+    };
+  };
+
+  const formatFeatureValue = (value: number, baseFeature: string): string => {
+    if (baseFeature === 'confectionarySalesTaxPercent') {
+      return `${value}%`;
+    } else if (['taxableIncome', 'salary', 'revenue', 'amountTaxable', 'bubblegumTax'].includes(baseFeature)) {
+      return value > 0 ? `$${value.toLocaleString()}` : '$0';
+    }
+    return value.toString();
+  };
+
   const handleExportResults = () => {
     if (!mlResult || !mlResult.anomalies.length) return;
 
@@ -545,38 +615,79 @@ export default function MLAnalysisPage() {
               {/* Feature Contributions */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Feature Contributions</h3>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Feature</TableHead>
-                        <TableHead>Value</TableHead>
-                        <TableHead>Contribution</TableHead>
-                        <TableHead>Impact</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {limeExplanation.feature_contributions.map((contrib, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{contrib.feature}</TableCell>
-                          <TableCell>{formatCurrency(contrib.value.toString())}</TableCell>
-                          <TableCell className={getContributionColor(contrib.contribution)}>
-                            {contrib.contribution > 0 ? '+' : ''}{contrib.contribution.toFixed(3)}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <div 
-                                className={`w-3 h-3 rounded-full ${contrib.contribution > 0 ? 'bg-red-500' : 'bg-green-500'}`}
-                              ></div>
-                              <span className="text-sm">
-                                {contrib.contribution > 0 ? 'Increases anomaly' : 'Decreases anomaly'}
-                              </span>
+                <div className="space-y-4">
+                  {limeExplanation.feature_contributions.map((contrib, index) => {
+                    const isIncrease = contrib.contribution > 0;
+                    const humanReadableFeature = formatFeatureName(contrib.feature);
+                    const absContribution = Math.abs(contrib.contribution);
+                    
+                    return (
+                      <div key={index} className={`p-5 rounded-lg border-l-4 transition-all hover:shadow-md ${
+                        isIncrease 
+                          ? 'border-l-red-500 bg-gradient-to-r from-red-50 to-white' 
+                          : 'border-l-green-500 bg-gradient-to-r from-green-50 to-white'
+                      }`}>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <h4 className="text-lg font-medium text-gray-900">
+                                {humanReadableFeature.label}
+                              </h4>
+                              <Badge 
+                                variant={isIncrease ? "destructive" : "default"} 
+                                className={`text-xs font-medium ${
+                                  isIncrease 
+                                    ? 'bg-red-100 text-red-800 border-red-200' 
+                                    : 'bg-green-100 text-green-800 border-green-200'
+                                }`}
+                              >
+                                {isIncrease ? '⚠️ Risk Factor' : '✅ Normal Factor'}
+                              </Badge>
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                            
+                            <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                              {humanReadableFeature.description}
+                            </p>
+                            
+                            <div className="grid grid-cols-2 gap-6 text-sm">
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-500 font-medium">Company Value:</span>
+                                <span className="font-semibold text-gray-900 bg-gray-100 px-2 py-1 rounded">
+                                  {formatFeatureValue(contrib.value, humanReadableFeature.baseFeature)}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-500 font-medium">Impact Score:</span>
+                                <span className={`font-bold text-lg ${isIncrease ? 'text-red-600' : 'text-green-600'}`}>
+                                  {isIncrease ? '+' : ''}{contrib.contribution.toFixed(3)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Visual contribution indicator */}
+                          <div className="ml-6 flex flex-col items-center">
+                            <div className="text-xs text-gray-500 mb-2 font-medium">Impact Level</div>
+                            <div className="relative">
+                              <div className="w-16 h-2 bg-gray-200 rounded-full">
+                                <div 
+                                  className={`h-full rounded-full transition-all duration-500 ${
+                                    isIncrease ? 'bg-red-500' : 'bg-green-500'
+                                  }`}
+                                  style={{ width: `${Math.min(absContribution * 500, 100)}%` }}
+                                ></div>
+                              </div>
+                              <div className={`text-xs mt-1 text-center font-medium ${
+                                isIncrease ? 'text-red-600' : 'text-green-600'
+                              }`}>
+                                {absContribution > 0.01 ? 'High' : absContribution > 0.005 ? 'Medium' : 'Low'}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
