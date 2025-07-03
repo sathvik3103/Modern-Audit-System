@@ -79,10 +79,8 @@ const SESSION_STORAGE_KEY = 'audit_session_state';
 
 // Provider component
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<SessionState>(defaultSessionState);
-
-  // Load session from localStorage on mount
-  useEffect(() => {
+  const [session, setSession] = useState<SessionState>(() => {
+    // Initialize from localStorage on first render
     try {
       const stored = localStorage.getItem(SESSION_STORAGE_KEY);
       if (stored) {
@@ -91,31 +89,26 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (parsedSession.completedSteps) {
           parsedSession.completedSteps = new Set(parsedSession.completedSteps);
         }
-        setSession(parsedSession);
+        return parsedSession;
       }
     } catch (error) {
       console.warn('Failed to load session from localStorage:', error);
     }
-  }, []);
+    return defaultSessionState;
+  });
 
   // Save session to localStorage whenever it changes
   useEffect(() => {
-    const saveToStorage = () => {
-      try {
-        const sessionToStore = {
-          ...session,
-          // Convert Set to array for JSON serialization
-          completedSteps: Array.from(session.completedSteps)
-        };
-        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionToStore));
-      } catch (error) {
-        console.warn('Failed to save session to localStorage:', error);
-      }
-    };
-
-    // Debounce save operation to prevent infinite loop
-    const timeoutId = setTimeout(saveToStorage, 100);
-    return () => clearTimeout(timeoutId);
+    try {
+      const sessionToStore = {
+        ...session,
+        // Convert Set to array for JSON serialization
+        completedSteps: Array.from(session.completedSteps)
+      };
+      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionToStore));
+    } catch (error) {
+      console.warn('Failed to save session to localStorage:', error);
+    }
   }, [session]);
 
   // Update functions
