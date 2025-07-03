@@ -243,15 +243,7 @@ export default function AuditTableFilters({
         </PopoverContent>
       </Popover>
       
-      {/* Active Filters Display */}
-      {activeFiltersCount > 0 && (
-        <div className="flex items-center gap-1 text-sm text-gray-600">
-          <span>Filtered</span>
-          <Badge variant="secondary" className="text-xs">
-            {activeFiltersCount}
-          </Badge>
-        </div>
-      )}
+      
     </div>
   );
 }
