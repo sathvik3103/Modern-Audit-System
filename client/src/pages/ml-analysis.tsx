@@ -304,7 +304,7 @@ export default function MLAnalysisPage() {
                   id="threshold"
                   type="number"
                   min="0.1"
-                  max="1.0"
+                  max="3.0"
                   step="0.1"
                   value={parameters.anomaly_threshold}
                   onChange={(e) => setParameters({
@@ -314,7 +314,7 @@ export default function MLAnalysisPage() {
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   <Info className="w-3 h-3 inline mr-1" />
-                  Minimum score to flag as anomaly (0.1-1.0). Higher values show only the most unusual records.
+                  Minimum score to flag as anomaly. Typical range: 0.5 (catch more) to 1.5 (only most suspicious).
                 </p>
               </div>
             </div>
