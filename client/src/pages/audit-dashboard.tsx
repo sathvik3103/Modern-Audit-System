@@ -13,13 +13,22 @@ import { defaultRules, calculateAuditSummary } from "@/lib/audit-rules";
 import { exportToCsv, exportToPdf, ExportData } from "@/lib/export-utils";
 import { exportToPdfDirect } from "@/lib/pdf-alternative";
 import { apiRequest } from "@/lib/queryClient";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function AuditDashboard() {
-  const [rules, setRules] = useState<AuditRules>(defaultRules);
   const [selectedCompany, setSelectedCompany] = useState<FlaggedCompany | null>(null);
   const [explanationOpen, setExplanationOpen] = useState(false);
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { session, updateAuditRules, setCurrentStep, markStepCompleted } = useSession();
+
+  // Use rules from session context
+  const rules = session.auditRules;
+
+  // Update current step on mount
+  useEffect(() => {
+    setCurrentStep(3);
+  }, [setCurrentStep]);
 
   // Check if data exists, redirect if not
   const { data: companiesCheck = [], isLoading: checkLoading } = useQuery({
@@ -152,7 +161,7 @@ export default function AuditDashboard() {
         {/* Sidebar */}
         <AuditSidebar 
           rules={rules} 
-          onRulesChange={setRules}
+          onRulesChange={updateAuditRules}
           onApplyRules={handleApplyRules}
         />
 

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,20 @@ import { Upload, FileSpreadsheet, ArrowRight, Database, X, AlertCircle } from "l
 import { parseExcelData, validateUploadData, type UploadData } from "@/lib/data-processor";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useSession } from "@/contexts/SessionContext";
 import * as XLSX from 'xlsx';
 
 export default function DataUploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { session, updateUploadData, setCurrentStep, markStepCompleted } = useSession();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Update current step on mount
+  useEffect(() => {
+    setCurrentStep(1);
+  }, [setCurrentStep]);
 
   // Upload mutation
   const uploadMutation = useMutation({
@@ -22,7 +29,18 @@ export default function DataUploadPage() {
       const response = await apiRequest('POST', '/api/upload', data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (result, variables) => {
+      // Save upload data to session context
+      updateUploadData({
+        companies: variables.companies,
+        audits: variables.audits || [],
+        uploadedAt: new Date().toISOString(),
+        fileName: selectedFile?.name || 'uploaded_file'
+      });
+      
+      // Mark step as completed
+      markStepCompleted(1);
+      
       toast({
         title: "Upload Successful",
         description: "Your Excel data has been processed. Proceeding to data exploration.",
@@ -45,6 +63,17 @@ export default function DataUploadPage() {
       return response.json();
     },
     onSuccess: () => {
+      // Save sample data info to session context
+      updateUploadData({
+        companies: [],
+        audits: [],
+        uploadedAt: new Date().toISOString(),
+        fileName: 'sample_data'
+      });
+      
+      // Mark step as completed
+      markStepCompleted(1);
+      
       toast({
         title: "Sample Data Loaded",
         description: "Sample confectionary audit data has been loaded. Proceeding to exploration.",

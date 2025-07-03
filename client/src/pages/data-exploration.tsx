@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, ArrowLeft, Database, Eye, Users, Calendar } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSession } from "@/contexts/SessionContext";
 
 interface CompanyData {
   id: number;
@@ -37,6 +38,12 @@ interface JoinedData extends CompanyData {
 
 export default function DataExplorationPage() {
   const [, setLocation] = useLocation();
+  const { session, setCurrentStep, markStepCompleted } = useSession();
+
+  // Update current step on mount
+  useEffect(() => {
+    setCurrentStep(2);
+  }, [setCurrentStep]);
 
   // Fetch companies data
   const { data: companies = [], isLoading: companiesLoading } = useQuery<CompanyData[]>({
@@ -66,6 +73,8 @@ export default function DataExplorationPage() {
   });
 
   const handleProceedToAudit = () => {
+    // Mark step as completed
+    markStepCompleted(2);
     setLocation("/audit");
   };
 

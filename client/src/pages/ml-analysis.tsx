@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +17,7 @@ import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatCurrency, formatPercentage } from "@/lib/audit-rules";
 import { useToast } from "@/hooks/use-toast";
+import { useSession } from "@/contexts/SessionContext";
 import jsPDF from 'jspdf';
 
 interface MLParameters {
@@ -78,11 +79,15 @@ interface AnomalyFeedback {
 export default function MLAnalysisPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [parameters, setParameters] = useState<MLParameters>({
-    contamination: 0.1,
-    n_neighbors: 20,
-    anomaly_threshold: 0.5
-  });
+  const { session, updateMLParameters, setCurrentStep, markStepCompleted } = useSession();
+
+  // Use parameters from session context
+  const parameters = session.mlParameters;
+
+  // Update current step on mount
+  useEffect(() => {
+    setCurrentStep(4);
+  }, [setCurrentStep]);
   const [mlResult, setMlResult] = useState<MLResult | null>(null);
   const [selectedAnomaly, setSelectedAnomaly] = useState<MLAnomaly | null>(null);
   const [limeExplanation, setLimeExplanation] = useState<LimeExplanation | null>(null);
@@ -834,7 +839,7 @@ export default function MLAnalysisPage() {
                   max="0.5"
                   step="0.05"
                   value={parameters.contamination}
-                  onChange={(e) => setParameters({
+                  onChange={(e) => updateMLParameters({
                     ...parameters,
                     contamination: parseFloat(e.target.value)
                   })}
@@ -853,7 +858,7 @@ export default function MLAnalysisPage() {
                   min="5"
                   max="50"
                   value={parameters.n_neighbors}
-                  onChange={(e) => setParameters({
+                  onChange={(e) => updateMLParameters({
                     ...parameters,
                     n_neighbors: parseInt(e.target.value)
                   })}
@@ -873,7 +878,7 @@ export default function MLAnalysisPage() {
                   max="3.0"
                   step="0.1"
                   value={parameters.anomaly_threshold}
-                  onChange={(e) => setParameters({
+                  onChange={(e) => updateMLParameters({
                     ...parameters,
                     anomaly_threshold: parseFloat(e.target.value)
                   })}
