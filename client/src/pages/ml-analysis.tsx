@@ -9,9 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Info, Brain, Download, ArrowLeft, Eye } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Info, Brain, Download, ArrowLeft, Eye, MessageSquare, FileText } from "lucide-react";
 import { useLocation } from "wouter";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatCurrency, formatPercentage } from "@/lib/audit-rules";
 import { useToast } from "@/hooks/use-toast";
 
@@ -60,6 +63,17 @@ interface LimeExplanation {
   ai_summary?: string;
 }
 
+interface AnomalyFeedback {
+  id: number;
+  corpId: number;
+  anomalySessionId: string;
+  anomalyScore: string;
+  detectionMethod: string;
+  feedbackType: 'accept_anomaly' | 'false_positive' | 'false_negative' | 'ignore';
+  auditorNotes: string | null;
+  createdAt: Date;
+}
+
 export default function MLAnalysisPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -73,6 +87,12 @@ export default function MLAnalysisPage() {
   const [limeExplanation, setLimeExplanation] = useState<LimeExplanation | null>(null);
   const [explanationOpen, setExplanationOpen] = useState(false);
   const [explanationStyle, setExplanationStyle] = useState('thresholds');
+  const [sessionId, setSessionId] = useState<string>('');
+  const [feedbackMap, setFeedbackMap] = useState<Map<number, AnomalyFeedback>>(new Map());
+  const [selectedAnomalies, setSelectedAnomalies] = useState<Set<number>>(new Set());
+  const [bulkFeedbackOpen, setBulkFeedbackOpen] = useState(false);
+  const [feedbackNotesOpen, setFeedbackNotesOpen] = useState(false);
+  const [currentFeedbackCorpId, setCurrentFeedbackCorpId] = useState<number | null>(null);
 
   // Check if we have data
   const { data: companies = [] } = useQuery<any[]>({
@@ -94,6 +114,10 @@ export default function MLAnalysisPage() {
     onSuccess: (data) => {
       if (data.success) {
         setMlResult(data);
+        const newSessionId = `ml_session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        setSessionId(newSessionId);
+        setFeedbackMap(new Map());
+        setSelectedAnomalies(new Set());
         toast({
           title: "Analysis Complete",
           description: `Found ${data.anomalies_detected} anomalies out of ${data.total_records} records`,
@@ -138,6 +162,88 @@ export default function MLAnalysisPage() {
     }
   });
 
+  // Feedback mutation
+  const feedbackMutation = useMutation({
+    mutationFn: async (feedback: {
+      corpId: number;
+      anomalyScore: number;
+      detectionMethod: string;
+      feedbackType: string;
+      auditorNotes?: string;
+    }) => {
+      const response = await apiRequest('POST', '/api/anomaly-feedback', {
+        ...feedback,
+        anomalySessionId: sessionId,
+        anomalyScore: feedback.anomalyScore.toString(),
+        auditorNotes: feedback.auditorNotes || null,
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setFeedbackMap(prev => new Map(prev.set(data.corpId, data)));
+      queryClient.invalidateQueries({ queryKey: ['/api/anomaly-feedback', sessionId] });
+      toast({
+        title: "Feedback Saved",
+        description: "Auditor feedback has been recorded.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Feedback Failed",
+        description: error instanceof Error ? error.message : "Failed to save feedback",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Bulk feedback mutation
+  const bulkFeedbackMutation = useMutation({
+    mutationFn: async (feedback: {
+      feedbackType: string;
+      auditorNotes?: string;
+      corpIds: number[];
+    }) => {
+      const promises = feedback.corpIds.map(corpId => {
+        const anomaly = mlResult?.anomalies.find(a => a.corp_id === corpId);
+        if (!anomaly) return null;
+        
+        return apiRequest('POST', '/api/anomaly-feedback', {
+          corpId,
+          anomalySessionId: sessionId,
+          anomalyScore: anomaly.anomaly_score.toString(),
+          detectionMethod: anomaly.detection_method,
+          feedbackType: feedback.feedbackType,
+          auditorNotes: feedback.auditorNotes || null,
+        });
+      });
+      
+      return Promise.all(promises.filter(p => p !== null));
+    },
+    onSuccess: (responses) => {
+      const newFeedbackMap = new Map(feedbackMap);
+      responses.forEach(async (response) => {
+        if (response) {
+          const data = await response.json();
+          newFeedbackMap.set(data.corpId, data);
+        }
+      });
+      setFeedbackMap(newFeedbackMap);
+      setSelectedAnomalies(new Set());
+      setBulkFeedbackOpen(false);
+      toast({
+        title: "Bulk Feedback Saved",
+        description: `Applied feedback to ${responses.length} anomalies.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Bulk Feedback Failed",
+        description: error instanceof Error ? error.message : "Failed to save bulk feedback",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleRunAnalysis = () => {
     mlAnalysisMutation.mutate(parameters);
   };
@@ -150,34 +256,99 @@ export default function MLAnalysisPage() {
     });
   };
 
+  const handleFeedback = (corpId: number, feedbackType: string, auditorNotes?: string) => {
+    const anomaly = mlResult?.anomalies.find(a => a.corp_id === corpId);
+    if (!anomaly) return;
+
+    feedbackMutation.mutate({
+      corpId,
+      anomalyScore: anomaly.anomaly_score,
+      detectionMethod: anomaly.detection_method,
+      feedbackType,
+      auditorNotes
+    });
+  };
+
+  const handleToggleSelection = (corpId: number) => {
+    const newSelection = new Set(selectedAnomalies);
+    if (newSelection.has(corpId)) {
+      newSelection.delete(corpId);
+    } else {
+      newSelection.add(corpId);
+    }
+    setSelectedAnomalies(newSelection);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedAnomalies.size === mlResult?.anomalies.length) {
+      setSelectedAnomalies(new Set());
+    } else {
+      setSelectedAnomalies(new Set(mlResult?.anomalies.map(a => a.corp_id) || []));
+    }
+  };
+
+  const getFeedbackBadge = (corpId: number) => {
+    const feedback = feedbackMap.get(corpId);
+    if (!feedback) return null;
+
+    const feedbackLabels = {
+      accept_anomaly: { label: "Accepted", color: "bg-red-100 text-red-800" },
+      false_positive: { label: "False +", color: "bg-yellow-100 text-yellow-800" },
+      false_negative: { label: "False -", color: "bg-blue-100 text-blue-800" },
+      ignore: { label: "Ignored", color: "bg-gray-100 text-gray-800" }
+    };
+
+    const config = feedbackLabels[feedback.feedbackType];
+    return (
+      <Badge variant="outline" className={`text-xs ${config.color}`}>
+        {config.label}
+      </Badge>
+    );
+  };
+
 
 
   const handleExportResults = () => {
     if (!mlResult || !mlResult.anomalies.length) return;
 
-    const csvData = mlResult.anomalies.map(anomaly => ({
-      company_name: anomaly.corp_name,
-      corp_id: anomaly.corp_id,
-      anomaly_score: anomaly.anomaly_score.toFixed(3),
-      detection_method: anomaly.detection_method,
-      taxable_income: anomaly.record_data.taxableIncome,
-      salary: anomaly.record_data.salary,
-      revenue: anomaly.record_data.revenue,
-      amount_taxable: anomaly.record_data.amountTaxable,
-      bubblegum_tax: anomaly.record_data.bubblegumTax,
-      sales_tax_percent: anomaly.record_data.confectionarySalesTaxPercent
-    }));
+    const csvData = mlResult.anomalies.map(anomaly => {
+      const feedback = feedbackMap.get(anomaly.corp_id);
+      const feedbackLabels = {
+        accept_anomaly: "Accepted",
+        false_positive: "False Positive",
+        false_negative: "False Negative",
+        ignore: "Ignored"
+      };
+
+      return {
+        company_name: anomaly.corp_name,
+        corp_id: anomaly.corp_id,
+        anomaly_score: anomaly.anomaly_score.toFixed(3),
+        detection_method: anomaly.detection_method,
+        taxable_income: anomaly.record_data.taxableIncome || '',
+        salary: anomaly.record_data.salary || '',
+        revenue: anomaly.record_data.revenue || '',
+        amount_taxable: anomaly.record_data.amountTaxable || '',
+        bubblegum_tax: anomaly.record_data.bubblegumTax || '',
+        sales_tax_percent: anomaly.record_data.confectionarySalesTaxPercent || '',
+        auditor_feedback: feedback ? feedbackLabels[feedback.feedbackType] || feedback.feedbackType : '',
+        auditor_notes: feedback?.auditorNotes || '',
+        session_id: sessionId
+      };
+    });
 
     const csvContent = [
       Object.keys(csvData[0]).join(','),
-      ...csvData.map(row => Object.values(row).join(','))
+      ...csvData.map(row => Object.values(row).map(value => 
+        typeof value === 'string' && value.includes(',') ? `"${value}"` : value
+      ).join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `ml_anomalies_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `ml_anomalies_with_feedback_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -361,6 +532,16 @@ export default function MLAnalysisPage() {
                       <Badge variant="outline">
                         {(mlResult.anomaly_rate * 100).toFixed(1)}% anomaly rate
                       </Badge>
+                      {selectedAnomalies.size > 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setBulkFeedbackOpen(true)}
+                        >
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          Bulk Feedback ({selectedAnomalies.size})
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -385,6 +566,12 @@ export default function MLAnalysisPage() {
                       <Table>
                         <TableHeader>
                           <TableRow>
+                            <TableHead className="w-12">
+                              <Checkbox
+                                checked={selectedAnomalies.size === mlResult.anomalies.length && mlResult.anomalies.length > 0}
+                                onCheckedChange={handleSelectAll}
+                              />
+                            </TableHead>
                             <TableHead>Company</TableHead>
                             <TableHead>Corp ID</TableHead>
                             <TableHead>Anomaly Score</TableHead>
@@ -392,12 +579,19 @@ export default function MLAnalysisPage() {
                             <TableHead>Taxable Income</TableHead>
                             <TableHead>Bubblegum Tax</TableHead>
                             <TableHead>Sales Tax %</TableHead>
+                            <TableHead>Auditor Feedback</TableHead>
                             <TableHead>Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {mlResult.anomalies.map((anomaly, index) => (
                             <TableRow key={index}>
+                              <TableCell>
+                                <Checkbox
+                                  checked={selectedAnomalies.has(anomaly.corp_id)}
+                                  onCheckedChange={() => handleToggleSelection(anomaly.corp_id)}
+                                />
+                              </TableCell>
                               <TableCell className="font-medium">{anomaly.corp_name}</TableCell>
                               <TableCell>{anomaly.corp_id}</TableCell>
                               <TableCell>
@@ -414,6 +608,37 @@ export default function MLAnalysisPage() {
                               <TableCell>{formatCurrency(anomaly.record_data.taxableIncome)}</TableCell>
                               <TableCell>{formatCurrency(anomaly.record_data.bubblegumTax)}</TableCell>
                               <TableCell>{formatPercentage(anomaly.record_data.confectionarySalesTaxPercent)}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center space-x-2">
+                                  {getFeedbackBadge(anomaly.corp_id)}
+                                  <Select
+                                    onValueChange={(value) => handleFeedback(anomaly.corp_id, value)}
+                                    disabled={feedbackMutation.isPending}
+                                  >
+                                    <SelectTrigger className="w-32">
+                                      <SelectValue placeholder="Add feedback" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="accept_anomaly">Accept Anomaly</SelectItem>
+                                      <SelectItem value="false_positive">False Positive</SelectItem>
+                                      <SelectItem value="false_negative">False Negative</SelectItem>
+                                      <SelectItem value="ignore">Ignore</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  {feedbackMap.has(anomaly.corp_id) && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setCurrentFeedbackCorpId(anomaly.corp_id);
+                                        setFeedbackNotesOpen(true);
+                                      }}
+                                    >
+                                      <FileText className="w-4 h-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
                               <TableCell>
                                 <Button
                                   variant="outline"
@@ -621,6 +846,101 @@ export default function MLAnalysisPage() {
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
               <p className="text-gray-600">Generating explanation...</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Feedback Dialog */}
+      <Dialog open={bulkFeedbackOpen} onOpenChange={setBulkFeedbackOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bulk Auditor Feedback</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Apply feedback to {selectedAnomalies.size} selected anomalies.
+            </p>
+            <div className="space-y-2">
+              <Label>Feedback Type</Label>
+              <Select onValueChange={(value) => {
+                const notes = document.getElementById('bulk-notes') as HTMLTextAreaElement;
+                bulkFeedbackMutation.mutate({
+                  feedbackType: value,
+                  auditorNotes: notes?.value || undefined,
+                  corpIds: Array.from(selectedAnomalies)
+                });
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select feedback type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="accept_anomaly">Accept Anomaly</SelectItem>
+                  <SelectItem value="false_positive">False Positive</SelectItem>
+                  <SelectItem value="false_negative">False Negative</SelectItem>
+                  <SelectItem value="ignore">Ignore</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bulk-notes">Notes (Optional)</Label>
+              <Textarea
+                id="bulk-notes"
+                placeholder="Add notes for all selected anomalies..."
+                rows={3}
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Feedback Notes Dialog */}
+      <Dialog open={feedbackNotesOpen} onOpenChange={setFeedbackNotesOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Auditor Notes</DialogTitle>
+          </DialogHeader>
+          {currentFeedbackCorpId && feedbackMap.has(currentFeedbackCorpId) && (
+            <div className="space-y-4">
+              <div className="p-3 bg-gray-50 rounded">
+                <h4 className="font-medium">
+                  {mlResult?.anomalies.find(a => a.corp_id === currentFeedbackCorpId)?.corp_name}
+                </h4>
+                <p className="text-sm text-gray-600">
+                  Corp ID: {currentFeedbackCorpId}
+                </p>
+                <div className="mt-2">
+                  {getFeedbackBadge(currentFeedbackCorpId)}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Current Notes</Label>
+                <div className="p-3 border rounded bg-gray-50 min-h-[100px]">
+                  {feedbackMap.get(currentFeedbackCorpId)?.auditorNotes || "No notes added"}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-notes">Update Notes</Label>
+                <Textarea
+                  id="new-notes"
+                  placeholder="Update auditor notes..."
+                  rows={3}
+                  defaultValue={feedbackMap.get(currentFeedbackCorpId)?.auditorNotes || ""}
+                />
+                <Button
+                  onClick={() => {
+                    const textarea = document.getElementById('new-notes') as HTMLTextAreaElement;
+                    const feedback = feedbackMap.get(currentFeedbackCorpId!);
+                    if (feedback && textarea) {
+                      handleFeedback(currentFeedbackCorpId!, feedback.feedbackType, textarea.value);
+                      setFeedbackNotesOpen(false);
+                    }
+                  }}
+                  disabled={feedbackMutation.isPending}
+                >
+                  Update Notes
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>

@@ -1,4 +1,4 @@
-import { companies, audits, auditFlags, type Company, type InsertCompany, type Audit, type InsertAudit, type AuditFlag, type InsertAuditFlag } from "@shared/schema";
+import { companies, audits, auditFlags, anomalyFeedback, type Company, type InsertCompany, type Audit, type InsertAudit, type AuditFlag, type InsertAuditFlag, type AnomalyFeedback, type InsertAnomalyFeedback } from "@shared/schema";
 
 export interface IStorage {
   // Company operations
@@ -21,23 +21,36 @@ export interface IStorage {
   createFlag(flag: InsertAuditFlag): Promise<AuditFlag>;
   bulkCreateFlags(flags: InsertAuditFlag[]): Promise<AuditFlag[]>;
   clearFlags(): Promise<void>;
+  
+  // Anomaly feedback operations
+  getAnomalyFeedback(): Promise<AnomalyFeedback[]>;
+  getAnomalyFeedbackBySessionId(sessionId: string): Promise<AnomalyFeedback[]>;
+  getAnomalyFeedbackByCorpId(corpId: number): Promise<AnomalyFeedback[]>;
+  createAnomalyFeedback(feedback: InsertAnomalyFeedback): Promise<AnomalyFeedback>;
+  updateAnomalyFeedback(id: number, feedback: Partial<InsertAnomalyFeedback>): Promise<AnomalyFeedback>;
+  bulkCreateAnomalyFeedback(feedback: InsertAnomalyFeedback[]): Promise<AnomalyFeedback[]>;
+  clearAnomalyFeedback(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
   private companies: Map<number, Company>;
   private audits: Map<number, Audit>;
   private flags: Map<number, AuditFlag>;
+  private anomalyFeedback: Map<number, AnomalyFeedback>;
   private currentCompanyId: number;
   private currentAuditId: number;
   private currentFlagId: number;
+  private currentAnomalyFeedbackId: number;
 
   constructor() {
     this.companies = new Map();
     this.audits = new Map();
     this.flags = new Map();
+    this.anomalyFeedback = new Map();
     this.currentCompanyId = 1;
     this.currentAuditId = 1;
     this.currentFlagId = 1;
+    this.currentAnomalyFeedbackId = 1;
     
     // Initialize with sample data
     this.initializeSampleData();
@@ -404,6 +417,58 @@ export class MemStorage implements IStorage {
   async clearFlags(): Promise<void> {
     this.flags.clear();
     this.currentFlagId = 1;
+  }
+
+  // Anomaly feedback operations
+  async getAnomalyFeedback(): Promise<AnomalyFeedback[]> {
+    return Array.from(this.anomalyFeedback.values());
+  }
+
+  async getAnomalyFeedbackBySessionId(sessionId: string): Promise<AnomalyFeedback[]> {
+    return Array.from(this.anomalyFeedback.values()).filter(f => f.anomalySessionId === sessionId);
+  }
+
+  async getAnomalyFeedbackByCorpId(corpId: number): Promise<AnomalyFeedback[]> {
+    return Array.from(this.anomalyFeedback.values()).filter(f => f.corpId === corpId);
+  }
+
+  async createAnomalyFeedback(insertFeedback: InsertAnomalyFeedback): Promise<AnomalyFeedback> {
+    const id = this.currentAnomalyFeedbackId++;
+    const feedback: AnomalyFeedback = { 
+      ...insertFeedback, 
+      id,
+      auditorNotes: insertFeedback.auditorNotes || null,
+      createdAt: new Date()
+    };
+    this.anomalyFeedback.set(id, feedback);
+    return feedback;
+  }
+
+  async updateAnomalyFeedback(id: number, updates: Partial<InsertAnomalyFeedback>): Promise<AnomalyFeedback> {
+    const existing = this.anomalyFeedback.get(id);
+    if (!existing) {
+      throw new Error(`Anomaly feedback with id ${id} not found`);
+    }
+    
+    const updated: AnomalyFeedback = { 
+      ...existing, 
+      ...updates 
+    };
+    this.anomalyFeedback.set(id, updated);
+    return updated;
+  }
+
+  async bulkCreateAnomalyFeedback(feedbacks: InsertAnomalyFeedback[]): Promise<AnomalyFeedback[]> {
+    const created: AnomalyFeedback[] = [];
+    for (const feedback of feedbacks) {
+      created.push(await this.createAnomalyFeedback(feedback));
+    }
+    return created;
+  }
+
+  async clearAnomalyFeedback(): Promise<void> {
+    this.anomalyFeedback.clear();
+    this.currentAnomalyFeedbackId = 1;
   }
 }
 

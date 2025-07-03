@@ -674,6 +674,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Anomaly Feedback Routes
+  app.post("/api/anomaly-feedback", async (req, res) => {
+    try {
+      const feedbackData = req.body;
+      
+      // Validate feedback data
+      const validFeedbackTypes = ['accept_anomaly', 'false_positive', 'false_negative', 'ignore'];
+      if (!validFeedbackTypes.includes(feedbackData.feedbackType)) {
+        return res.status(400).json({ error: "Invalid feedback type" });
+      }
+      
+      const feedback = await storage.createAnomalyFeedback(feedbackData);
+      res.json(feedback);
+    } catch (error) {
+      console.error('Anomaly feedback creation error:', error);
+      res.status(500).json({ error: "Failed to create anomaly feedback" });
+    }
+  });
+
+  app.get("/api/anomaly-feedback/session/:sessionId", async (req, res) => {
+    try {
+      const sessionId = req.params.sessionId;
+      const feedback = await storage.getAnomalyFeedbackBySessionId(sessionId);
+      res.json(feedback);
+    } catch (error) {
+      console.error('Anomaly feedback fetch error:', error);
+      res.status(500).json({ error: "Failed to fetch anomaly feedback" });
+    }
+  });
+
+  app.put("/api/anomaly-feedback/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      // Validate feedback type if provided
+      if (updates.feedbackType) {
+        const validFeedbackTypes = ['accept_anomaly', 'false_positive', 'false_negative', 'ignore'];
+        if (!validFeedbackTypes.includes(updates.feedbackType)) {
+          return res.status(400).json({ error: "Invalid feedback type" });
+        }
+      }
+      
+      const feedback = await storage.updateAnomalyFeedback(id, updates);
+      res.json(feedback);
+    } catch (error) {
+      console.error('Anomaly feedback update error:', error);
+      res.status(500).json({ error: "Failed to update anomaly feedback" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

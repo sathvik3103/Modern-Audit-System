@@ -32,6 +32,17 @@ export const auditFlags = pgTable("audit_flags", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const anomalyFeedback = pgTable("anomaly_feedback", {
+  id: serial("id").primaryKey(),
+  corpId: integer("corp_id").notNull(),
+  anomalySessionId: text("anomaly_session_id").notNull(),
+  anomalyScore: decimal("anomaly_score", { precision: 10, scale: 6 }).notNull(),
+  detectionMethod: text("detection_method").notNull(), // 'isolation_forest' or 'lof'
+  feedbackType: text("feedback_type").notNull(), // 'accept_anomaly', 'false_positive', 'false_negative', 'ignore'
+  auditorNotes: text("auditor_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertCompanySchema = createInsertSchema(companies).omit({
   id: true,
 });
@@ -45,12 +56,19 @@ export const insertAuditFlagSchema = createInsertSchema(auditFlags).omit({
   createdAt: true,
 });
 
+export const insertAnomalyFeedbackSchema = createInsertSchema(anomalyFeedback).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type Company = typeof companies.$inferSelect;
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Audit = typeof audits.$inferSelect;
 export type InsertAudit = z.infer<typeof insertAuditSchema>;
 export type AuditFlag = typeof auditFlags.$inferSelect;
 export type InsertAuditFlag = z.infer<typeof insertAuditFlagSchema>;
+export type AnomalyFeedback = typeof anomalyFeedback.$inferSelect;
+export type InsertAnomalyFeedback = z.infer<typeof insertAnomalyFeedbackSchema>;
 
 // Additional types for API responses
 export const auditRulesSchema = z.object({
