@@ -442,11 +442,13 @@ export default function MLAnalysisPage() {
     
     summaryData.forEach((item, index) => {
       const x = 20 + (index * 60);
-      addColoredRect(x, currentY, 50, 25, [item.color[0], item.color[1], item.color[2], 0.1]);
+      
+      // Draw border only
       doc.setDrawColor(item.color[0], item.color[1], item.color[2]);
       doc.setLineWidth(1);
       doc.rect(x, currentY, 50, 25);
       
+      // Add text without background fill
       doc.setTextColor(item.color[0], item.color[1], item.color[2]);
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
@@ -486,25 +488,34 @@ export default function MLAnalysisPage() {
       .slice(0, 8);
     
     featureEntries.forEach(([feature, importance], index) => {
-      const barWidth = importance * 120;
-      const barHeight = 8;
+      const barWidth = importance * 100; // Reduced width to fit better
+      const barHeight = 6;
       const x = 25;
       const y = currentY;
       
+      // Feature name
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+      doc.text(`${feature}:`, x, y + 3);
+      
       // Background bar
-      addColoredRect(x + 80, y - 2, 120, barHeight, [240, 240, 240]);
+      doc.setDrawColor(220, 220, 220);
+      doc.setLineWidth(0.5);
+      doc.rect(x + 70, y - 1, 100, barHeight);
       
       // Progress bar
       const color = index < 3 ? colors.primary : colors.secondary;
-      addColoredRect(x + 80, y - 2, barWidth, barHeight, color);
+      doc.setFillColor(color[0], color[1], color[2]);
+      doc.rect(x + 70, y - 1, barWidth, barHeight, 'F');
       
+      // Percentage value
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`${feature}:`, x, y + 3);
       doc.setFont('helvetica', 'bold');
-      doc.text(`${(importance * 100).toFixed(1)}%`, x + 205, y + 3);
+      doc.setTextColor(color[0], color[1], color[2]);
+      doc.text(`${(importance * 100).toFixed(1)}%`, x + 175, y + 3);
       
-      currentY += 12;
+      currentY += 10;
     });
     
     currentY += 10;
@@ -599,101 +610,110 @@ export default function MLAnalysisPage() {
       // LIME Explanation
       const explanation = explanations.get(anomaly.corp_id);
       if (explanation) {
-        currentY += 5;
+        currentY += 8;
         
         // ML Analysis Summary
         if (explanation.ai_summary) {
-          addColoredRect(20, currentY - 3, 170, 8, [59, 130, 246, 0.1]);
-          doc.setFontSize(12);
+          // Section header
+          doc.setDrawColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+          doc.setLineWidth(0.5);
+          doc.line(20, currentY, 190, currentY);
+          currentY += 5;
+          
+          doc.setFontSize(11);
           doc.setFont('helvetica', 'bold');
           doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-          doc.text('ML Analysis Summary', 25, currentY + 2);
+          doc.text('ML Analysis Summary', 25, currentY);
           doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
-          currentY += 12;
+          currentY += 8;
           
           doc.setFontSize(9);
           doc.setFont('helvetica', 'normal');
           const summaryLines = doc.splitTextToSize(explanation.ai_summary, 165);
           summaryLines.forEach((line: string) => {
             doc.text(line, 25, currentY);
-            currentY += 5;
+            currentY += 4;
           });
-          currentY += 5;
+          currentY += 8;
         }
         
         // Prediction Probabilities
-        addColoredRect(20, currentY - 3, 170, 8, colors.background);
-        doc.setFontSize(12);
+        doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
-        doc.text('Prediction Probabilities', 25, currentY + 2);
-        currentY += 15;
+        doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+        doc.text('Prediction Probabilities', 25, currentY);
+        doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+        currentY += 10;
         
-        // Normal vs Anomaly probability bars
+        // Normal vs Anomaly probability
         const normalProb = explanation.prediction_probabilities.normal;
         const anomalyProb = explanation.prediction_probabilities.anomaly;
         
-        // Normal probability bar
-        addColoredRect(25, currentY - 2, normalProb * 80, 6, colors.secondary);
+        // Normal probability
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
-        doc.text(`Normal: ${(normalProb * 100).toFixed(1)}%`, 110, currentY + 2);
-        currentY += 10;
+        doc.text(`Normal: ${(normalProb * 100).toFixed(1)}%`, 25, currentY);
+        doc.setDrawColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+        doc.setLineWidth(0.5);
+        doc.rect(80, currentY - 3, normalProb * 60, 5);
+        doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+        doc.rect(80, currentY - 3, normalProb * 60, 5, 'F');
+        currentY += 8;
         
-        // Anomaly probability bar
-        addColoredRect(25, currentY - 2, anomalyProb * 80, 6, colors.accent);
-        doc.text(`Anomaly: ${(anomalyProb * 100).toFixed(1)}%`, 110, currentY + 2);
-        currentY += 15;
+        // Anomaly probability
+        doc.text(`Anomaly: ${(anomalyProb * 100).toFixed(1)}%`, 25, currentY);
+        doc.setDrawColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+        doc.rect(80, currentY - 3, anomalyProb * 60, 5);
+        doc.setFillColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+        doc.rect(80, currentY - 3, anomalyProb * 60, 5, 'F');
+        currentY += 12;
         
         // Feature Contributions
-        if (explanation.feature_contributions.length > 0) {
-          addColoredRect(20, currentY - 3, 170, 8, colors.background);
-          doc.setFontSize(12);
+        if (explanation.feature_contributions && explanation.feature_contributions.length > 0) {
+          doc.setFontSize(11);
           doc.setFont('helvetica', 'bold');
-          doc.text('Key Feature Contributions', 25, currentY + 2);
-          currentY += 15;
+          doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+          doc.text('Key Feature Contributions', 25, currentY);
+          doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+          currentY += 10;
           
-          // Show top 5 feature contributions
+          // Show top 4 feature contributions
           const topContributions = explanation.feature_contributions
             .sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
-            .slice(0, 5);
+            .slice(0, 4);
           
           topContributions.forEach((contrib) => {
+            if (currentY > 260) {
+              doc.addPage();
+              currentY = 25;
+            }
+            
             const isSuspicious = contrib.contribution > 0;
             const maxContrib = Math.max(...explanation.feature_contributions.map(c => Math.abs(c.contribution)));
-            const barWidth = Math.abs(contrib.contribution) / maxContrib * 60;
+            const barWidth = Math.abs(contrib.contribution) / maxContrib * 40;
             
-            // Feature name
-            doc.setFontSize(9);
+            // Feature name and value
+            doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
-            doc.text(`${contrib.display_name}:`, 25, currentY + 2);
+            doc.text(`${contrib.display_name}: ${contrib.formatted_value}`, 25, currentY);
             
             // Contribution bar
             const barColor = isSuspicious ? colors.accent : colors.secondary;
-            addColoredRect(90, currentY - 1, barWidth, 5, barColor);
+            doc.setFillColor(barColor[0], barColor[1], barColor[2]);
+            doc.rect(25, currentY + 2, barWidth, 3, 'F');
             
-            // Value and context
+            // Impact score
             doc.setFont('helvetica', 'bold');
-            doc.text(`${contrib.contribution > 0 ? '+' : ''}${contrib.contribution.toFixed(3)}`, 155, currentY + 2);
-            
-            if (contrib.context) {
-              currentY += 6;
-              doc.setFontSize(8);
-              doc.setFont('helvetica', 'normal');
-              doc.setTextColor(100, 100, 100);
-              const contextLines = doc.splitTextToSize(contrib.context, 165);
-              contextLines.slice(0, 1).forEach((line: string) => {
-                doc.text(line, 25, currentY);
-                currentY += 4;
-              });
-              doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
-            }
+            doc.setTextColor(barColor[0], barColor[1], barColor[2]);
+            doc.text(`${contrib.contribution > 0 ? '+' : ''}${contrib.contribution.toFixed(3)}`, 70, currentY);
+            doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
             
             currentY += 8;
           });
         }
       }
       
-      currentY += 10;
+      currentY += 15;
       
       // Add separator line
       doc.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);

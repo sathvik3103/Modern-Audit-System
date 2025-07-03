@@ -122,6 +122,13 @@ Changelog:
   * Built comprehensive ML analysis page with feature importance and LIME explanations
   * Added navigation from Step 3 (Rule-based audit) to Step 4 (ML analysis)
   * Supports separate CSV export for ML findings
+- July 03, 2025. Enhanced ML Analysis PDF Export
+  * Added comprehensive PDF export functionality with professional BI dashboard design
+  * Fixed detection method display to show "Combined (Isolation Forest + LOF)" correctly
+  * Integrated complete LIME explanations for each anomaly including AI summaries, prediction probabilities, and feature contributions
+  * Implemented colorful visual elements with proper data display (executive summary cards, feature importance bars, probability visualizations)
+  * Created multi-page layout with detailed individual analysis for each detected anomaly
+  * Includes auditor feedback integration and session tracking for comprehensive reporting
 ```
 
 ## User Preferences
