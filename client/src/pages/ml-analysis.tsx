@@ -275,7 +275,7 @@ export default function MLAnalysisPage() {
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   <Info className="w-3 h-3 inline mr-1" />
-                  Expected proportion of anomalies in your data (5%-50%). Lower values find fewer, but more certain anomalies.
+                  Expected proportion of anomalies (0.05 = 5%, 0.1 = 10%, 0.2 = 20%). Lower values find fewer, more certain anomalies.
                 </p>
               </div>
               
@@ -294,7 +294,7 @@ export default function MLAnalysisPage() {
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   <Info className="w-3 h-3 inline mr-1" />
-                  How many nearby records to compare against. Higher values find more global patterns.
+                  How many similar companies to compare each record against. Lower values (5-15) find local outliers, higher values (20-40) find global patterns.
                 </p>
               </div>
               
