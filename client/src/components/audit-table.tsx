@@ -14,8 +14,8 @@ interface AuditTableProps {
   companies: FlaggedCompany[];
   loading: boolean;
   onShowExplanation: (company: FlaggedCompany) => void;
-  onExportCsv: () => void;
-  onExportPdf: () => void;
+  onExportCsv: (filteredCompanies?: FlaggedCompany[]) => void;
+  onExportPdf: (filteredCompanies?: FlaggedCompany[]) => void;
   exportLoading: boolean;
 }
 
@@ -135,8 +135,8 @@ export default function AuditTable({ companies, loading, onShowExplanation, onEx
               onClearFilters={handleClearFilters}
             />
             <ExportDropdown
-              onExportCsv={onExportCsv}
-              onExportPdf={onExportPdf}
+              onExportCsv={() => onExportCsv(filteredCompanies)}
+              onExportPdf={() => onExportPdf(filteredCompanies)}
               loading={exportLoading}
             />
           </div>
