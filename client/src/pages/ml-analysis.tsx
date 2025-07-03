@@ -154,32 +154,32 @@ export default function MLAnalysisPage() {
     
     const featureLabels: Record<string, { label: string; description: string; icon: string }> = {
       'taxableIncome': {
-        label: 'Taxable Income',
+        label: 'taxableIncome',
         description: 'Company\'s reported taxable income for the period',
         icon: '💰'
       },
       'salary': {
-        label: 'Salary Expenses',
+        label: 'salary',
         description: 'Total employee salary and payroll expenses',
         icon: '👥'
       },
       'revenue': {
-        label: 'Total Revenue',
+        label: 'revenue',
         description: 'Company\'s total revenue for the reporting period',
         icon: '📈'
       },
       'amountTaxable': {
-        label: 'Amount Subject to Tax',
+        label: 'amountTaxable',
         description: 'Total amount subject to taxation',
         icon: '🏛️'
       },
       'bubblegumTax': {
-        label: 'Bubblegum Product Tax',
+        label: 'bubblegumTax',
         description: 'Specific tax on bubblegum confectionery products',
         icon: '🍬'
       },
       'confectionarySalesTaxPercent': {
-        label: 'Confectionery Sales Tax Rate',
+        label: 'confectionarySalesTaxPercent',
         description: 'Sales tax percentage applied to confectionery products',
         icon: '📊'
       }
@@ -532,7 +532,6 @@ export default function MLAnalysisPage() {
                                 style={{ width: `${importance * 100}%` }}
                               ></div>
                             </div>
-                            <span className="text-xs text-gray-500 font-medium w-12">{(importance * 100).toFixed(1)}%</span>
                           </div>
                         </div>
                       );
