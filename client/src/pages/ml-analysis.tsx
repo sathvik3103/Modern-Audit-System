@@ -464,7 +464,28 @@ export default function MLAnalysisPage() {
                 <label className="text-sm font-medium">Explanation Style:</label>
                 <select 
                   value={explanationStyle} 
-                  onChange={(e) => setExplanationStyle(e.target.value)}
+                  onChange={(e) => {
+                    const newStyle = e.target.value;
+                    setExplanationStyle(newStyle);
+                    // Automatically refresh explanation with new style
+                    if (selectedAnomaly) {
+                      // Use the new style value directly in the API call
+                      apiRequest('POST', `/api/ml/explain/${selectedAnomaly.record_index}`, {
+                        anomaly_score: selectedAnomaly.anomaly_score,
+                        parameters: parameters,
+                        explanation_style: newStyle
+                      })
+                      .then(response => response.json())
+                      .then(data => {
+                        if (data.success) {
+                          setLimeExplanation(data.explanation);
+                        }
+                      })
+                      .catch(error => {
+                        console.error('Error fetching explanation:', error);
+                      });
+                    }
+                  }}
                   className="text-sm border border-gray-300 rounded px-2 py-1"
                 >
                   <option value="thresholds">Business Thresholds</option>
@@ -473,20 +494,7 @@ export default function MLAnalysisPage() {
                   <option value="quartiles">Quartile Analysis</option>
                   <option value="std_dev">Standard Deviations</option>
                 </select>
-                {explanationStyle !== 'thresholds' && (
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => {
-                      if (selectedAnomaly) {
-                        handleShowExplanation(selectedAnomaly);
-                      }
-                    }}
-                    disabled={explanationMutation.isPending}
-                  >
-                    Refresh
-                  </Button>
-                )}
+
               </div>
             </div>
           </DialogHeader>
