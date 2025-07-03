@@ -15,13 +15,20 @@ export default function DataUploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { session, updateUploadData, setCurrentStep, markStepCompleted } = useSession();
+  const { session, updateUploadData, setCurrentStep, markStepCompleted, uploadData } = useSession();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Update current step on mount
   useEffect(() => {
     setCurrentStep(1);
   }, [setCurrentStep]);
+
+  // Auto-mark step as completed when data is uploaded
+  useEffect(() => {
+    if (uploadData) {
+      markStepCompleted(1);
+    }
+  }, [uploadData]); // Remove markStepCompleted from dependencies to prevent infinite loop
 
   // Upload mutation
   const uploadMutation = useMutation({
@@ -37,10 +44,10 @@ export default function DataUploadPage() {
         uploadedAt: new Date().toISOString(),
         fileName: selectedFile?.name || 'uploaded_file'
       });
-      
+
       // Mark step as completed
       markStepCompleted(1);
-      
+
       toast({
         title: "Upload Successful",
         description: "Your Excel data has been processed. Proceeding to data exploration.",
@@ -70,10 +77,10 @@ export default function DataUploadPage() {
         uploadedAt: new Date().toISOString(),
         fileName: 'sample_data'
       });
-      
+
       // Mark step as completed
       markStepCompleted(1);
-      
+
       toast({
         title: "Sample Data Loaded",
         description: "Sample confectionary audit data has been loaded. Proceeding to exploration.",
@@ -111,7 +118,7 @@ export default function DataUploadPage() {
     try {
       const fileBuffer = await selectedFile.arrayBuffer();
       const workbook = XLSX.read(fileBuffer, { type: 'array' });
-      
+
       // Check if required sheets exist
       if (!workbook.SheetNames.includes('Returns') || !workbook.SheetNames.includes('Audit')) {
         toast({
@@ -125,19 +132,19 @@ export default function DataUploadPage() {
       // Parse the sheets
       const returnsSheet = workbook.Sheets['Returns'];
       const auditSheet = workbook.Sheets['Audit'];
-      
+
       const returnsData = XLSX.utils.sheet_to_json(returnsSheet);
       const auditData = XLSX.utils.sheet_to_json(auditSheet);
 
       // Helper function to convert Excel dates
       const convertExcelDate = (value: any): string => {
         if (!value) return "";
-        
+
         // If it's already a proper date string, return it
         if (typeof value === 'string' && value.includes('-')) {
           return value;
         }
-        
+
         // If it's an Excel serial date (number), convert it
         if (typeof value === 'number') {
           // Excel serial date conversion
@@ -146,18 +153,18 @@ export default function DataUploadPage() {
           // we need to subtract 2 days instead of 1
           const excelEpoch = new Date(1900, 0, 1); // January 1, 1900
           const daysToAdd = value - 2; // Account for Excel's leap year bug
-          
+
           // Create date in local timezone to avoid UTC conversion issues
           const jsDate = new Date(excelEpoch);
           jsDate.setDate(jsDate.getDate() + daysToAdd);
-          
+
           // Format as YYYY-MM-DD
           const year = jsDate.getFullYear();
           const month = String(jsDate.getMonth() + 1).padStart(2, '0');
           const day = String(jsDate.getDate()).padStart(2, '0');
           return `${year}-${month}-${day}`;
         }
-        
+
         // If it's a Date object, format it properly
         if (value instanceof Date) {
           const year = value.getFullYear();
@@ -165,7 +172,7 @@ export default function DataUploadPage() {
           const day = String(value.getDate()).padStart(2, '0');
           return `${year}-${month}-${day}`;
         }
-        
+
         return String(value);
       };
 
@@ -175,7 +182,7 @@ export default function DataUploadPage() {
           const value = row[key] || (altKey && row[altKey]) || "";
           return value === "" ? undefined : String(value);
         };
-        
+
         const getNullableValue = (key: string, altKey?: string) => {
           const value = row[key] !== undefined ? row[key] : (altKey && row[altKey]);
           return value !== undefined && value !== null && value !== "" ? String(value) : null;
@@ -203,9 +210,9 @@ export default function DataUploadPage() {
       }));
 
       const data = { companies, audits };
-      
+
       const validation = validateUploadData(data);
-      
+
       if (!validation.valid) {
         toast({
           title: "Data Validation Error",
@@ -262,33 +269,33 @@ export default function DataUploadPage() {
               </div>
               <span className="text-sm font-medium text-audit-blue max-w-32">Upload your Excel file with Returns and Audit sheets</span>
             </div>
-            
+
             <div className="flex-shrink-0 px-4">
               <ArrowRight className="w-5 h-5 text-gray-400" />
             </div>
-            
+
             <div className="flex flex-col items-center text-center flex-1">
               <div className="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium mb-2">
                 2
               </div>
               <span className="text-sm text-gray-500 max-w-32">Review and verify your uploaded data</span>
             </div>
-            
+
             <div className="flex-shrink-0 px-4">
               <ArrowRight className="w-5 h-5 text-gray-400" />
             </div>
-            
+
             <div className="flex flex-col items-center text-center flex-1">
               <div className="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium mb-2">
                 3
               </div>
               <span className="text-sm text-gray-500 max-w-32">Configure rules and analyze audit priorities</span>
             </div>
-            
+
             <div className="flex-shrink-0 px-4">
               <ArrowRight className="w-5 h-5 text-gray-400" />
             </div>
-            
+
             <div className="flex flex-col items-center text-center flex-1">
               <div className="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium mb-2">
                 4
@@ -325,7 +332,7 @@ export default function DataUploadPage() {
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                
+
                 {!selectedFile ? (
                   <div className="space-y-4">
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
@@ -387,7 +394,7 @@ export default function DataUploadPage() {
             <CardContent>
               <div className="space-y-4 text-sm">
                 <p className="text-gray-600">Your Excel file should have two sheets:</p>
-                
+
                 <div className="space-y-3">
                   <div>
                     <h4 className="font-medium text-gray-900">Returns Sheet Columns:</h4>
@@ -404,7 +411,7 @@ export default function DataUploadPage() {
                       <li>Confectionary Sales Tax %</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-medium text-gray-900">Audit Sheet Columns:</h4>
                     <ul className="list-disc list-inside text-gray-600 mt-1 space-y-1">
