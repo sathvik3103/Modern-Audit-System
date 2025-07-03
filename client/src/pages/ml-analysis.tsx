@@ -532,9 +532,8 @@ export default function MLAnalysisPage() {
     doc.text('Detailed Anomaly Analysis', 20, 12);
     doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
     
-    // Determine if we're using combined method
-    const usesCombinedMethod = mlResult.anomalies.length > 0 && 
-      mlResult.anomalies.every(a => a.detection_method === 'isolation_forest');
+    // Always use combined method since we run both Isolation Forest and LOF
+    const usesCombinedMethod = true;
 
     // Generate detailed analysis for each anomaly
     for (const anomaly of mlResult.anomalies) {
