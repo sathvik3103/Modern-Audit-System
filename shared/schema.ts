@@ -43,6 +43,19 @@ export const anomalyFeedback = pgTable("anomaly_feedback", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const customRules = pgTable("custom_rules", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull(),
+  ruleName: text("rule_name").notNull(),
+  fieldName: text("field_name").notNull(), // Which company field to evaluate
+  operator: text("operator").notNull(), // '>', '<', '>=', '<=', '==', '!=', 'contains', 'not_contains', 'empty', 'not_empty'
+  value: text("value"), // Threshold value or comparison value (null for empty/not_empty checks)
+  riskScore: integer("risk_score").notNull(),
+  enabled: boolean("enabled").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertCompanySchema = createInsertSchema(companies).omit({
   id: true,
 });
@@ -61,6 +74,12 @@ export const insertAnomalyFeedbackSchema = createInsertSchema(anomalyFeedback).o
   createdAt: true,
 });
 
+export const insertCustomRuleSchema = createInsertSchema(customRules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type Company = typeof companies.$inferSelect;
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Audit = typeof audits.$inferSelect;
@@ -69,6 +88,22 @@ export type AuditFlag = typeof auditFlags.$inferSelect;
 export type InsertAuditFlag = z.infer<typeof insertAuditFlagSchema>;
 export type AnomalyFeedback = typeof anomalyFeedback.$inferSelect;
 export type InsertAnomalyFeedback = z.infer<typeof insertAnomalyFeedbackSchema>;
+export type CustomRule = typeof customRules.$inferSelect;
+export type InsertCustomRule = z.infer<typeof insertCustomRuleSchema>;
+
+// Custom rule validation schema
+export const customRuleSchema = z.object({
+  id: z.number().optional(),
+  sessionId: z.string(),
+  ruleName: z.string().min(1, "Rule name is required"),
+  fieldName: z.string().min(1, "Field name is required"),
+  operator: z.enum(['>', '<', '>=', '<=', '==', '!=', 'contains', 'not_contains', 'empty', 'not_empty']),
+  value: z.string().optional(),
+  riskScore: z.number().min(0).max(100),
+  enabled: z.boolean().default(true),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
 
 // Additional types for API responses
 export const auditRulesSchema = z.object({
@@ -90,9 +125,12 @@ export const auditRulesSchema = z.object({
   // Risk level thresholds
   highRiskThreshold: z.number().min(0).max(200),
   mediumRiskThreshold: z.number().min(0).max(200),
+  // Custom rules
+  customRules: z.array(customRuleSchema).default([]),
 });
 
 export type AuditRules = z.infer<typeof auditRulesSchema>;
+export type CustomRuleType = z.infer<typeof customRuleSchema>;
 
 export const flaggedCompanySchema = z.object({
   company: z.object({

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AuditRules } from '@/types/audit';
+import { AuditRules, CustomRuleType } from '@shared/schema';
 import { defaultRules } from '@/lib/audit-rules';
 
 // Define ML Parameters interface
@@ -20,6 +20,9 @@ interface SessionUploadData extends UploadData {
 
 // Define Session State interface
 interface SessionState {
+  // Session identification
+  sessionId: string;
+  
   // Step 1: Data Upload
   uploadData: SessionUploadData | null;
   
@@ -51,17 +54,22 @@ interface SessionContextType {
   setCurrentStep: (step: number) => void;
   markStepCompleted: (step: number) => void;
   resetSession: () => void;
+  addCustomRule: (rule: CustomRuleType) => void;
+  updateCustomRule: (id: number, rule: Partial<CustomRuleType>) => void;
+  removeCustomRule: (id: number) => void;
+  getSessionId: () => string;
 }
 
 // Default session state
 const defaultSessionState: SessionState = {
+  sessionId: '',
   uploadData: null,
   explorationFilters: {
     searchTerm: '',
     sortBy: 'corpName',
     sortOrder: 'asc'
   },
-  auditRules: defaultRules,
+  auditRules: { ...defaultRules, customRules: [] },
   mlParameters: {
     contamination: 0.1,
     n_neighbors: 20,
@@ -78,6 +86,11 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 const SESSION_STORAGE_KEY = 'audit_session_state';
 
 // Provider component
+// Generate unique session ID
+function generateSessionId(): string {
+  return 'session_' + Date.now() + '_' + Math.random().toString(36).substring(2, 15);
+}
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<SessionState>(() => {
     // Initialize from localStorage on first render
@@ -89,12 +102,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (parsedSession.completedSteps) {
           parsedSession.completedSteps = new Set(parsedSession.completedSteps);
         }
+        // Ensure sessionId exists
+        if (!parsedSession.sessionId) {
+          parsedSession.sessionId = generateSessionId();
+        }
+        // Ensure customRules exists in auditRules
+        if (!parsedSession.auditRules.customRules) {
+          parsedSession.auditRules.customRules = [];
+        }
         return parsedSession;
       }
     } catch (error) {
       console.warn('Failed to load session from localStorage:', error);
     }
-    return defaultSessionState;
+    return { ...defaultSessionState, sessionId: generateSessionId() };
   });
 
   // Save session to localStorage whenever it changes
@@ -162,9 +183,43 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
 
   const resetSession = () => {
-    setSession(defaultSessionState);
+    setSession({ ...defaultSessionState, sessionId: generateSessionId() });
     localStorage.removeItem(SESSION_STORAGE_KEY);
   };
+
+  const addCustomRule = (rule: CustomRuleType) => {
+    setSession(prev => ({
+      ...prev,
+      auditRules: {
+        ...prev.auditRules,
+        customRules: [...prev.auditRules.customRules, rule]
+      }
+    }));
+  };
+
+  const updateCustomRule = (id: number, updates: Partial<CustomRuleType>) => {
+    setSession(prev => ({
+      ...prev,
+      auditRules: {
+        ...prev.auditRules,
+        customRules: prev.auditRules.customRules.map(rule => 
+          rule.id === id ? { ...rule, ...updates } : rule
+        )
+      }
+    }));
+  };
+
+  const removeCustomRule = (id: number) => {
+    setSession(prev => ({
+      ...prev,
+      auditRules: {
+        ...prev.auditRules,
+        customRules: prev.auditRules.customRules.filter(rule => rule.id !== id)
+      }
+    }));
+  };
+
+  const getSessionId = () => session.sessionId;
 
   const contextValue: SessionContextType = {
     session,
@@ -174,7 +229,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     updateMLParameters,
     setCurrentStep,
     markStepCompleted,
-    resetSession
+    resetSession,
+    addCustomRule,
+    updateCustomRule,
+    removeCustomRule,
+    getSessionId
   };
 
   return (

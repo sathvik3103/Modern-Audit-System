@@ -4,10 +4,11 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, AlertTriangle, CheckCircle, FileText, ArrowLeft, Brain } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle, FileText, ArrowLeft, Brain, Settings } from "lucide-react";
 import AuditSidebar from "@/components/audit-sidebar";
 import AuditTable from "@/components/audit-table";
 import ExplanationModal from "@/components/explanation-modal";
+import CustomRulesPanel from "@/components/custom-rules-panel";
 import { AuditRules, FlaggedCompany, AuditSummary, CompanyExplanation } from "@/types/audit";
 import { defaultRules, calculateAuditSummary } from "@/lib/audit-rules";
 import { exportToCsv, exportToPdf, ExportData } from "@/lib/export-utils";
@@ -18,6 +19,7 @@ import { useSession } from "@/contexts/SessionContext";
 export default function AuditDashboard() {
   const [selectedCompany, setSelectedCompany] = useState<FlaggedCompany | null>(null);
   const [explanationOpen, setExplanationOpen] = useState(false);
+  const [showCustomRulesPanel, setShowCustomRulesPanel] = useState(false);
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { session, updateAuditRules, setCurrentStep, markStepCompleted } = useSession();
@@ -191,6 +193,14 @@ export default function AuditDashboard() {
                 Step 3 of 4
               </Badge>
               <Button 
+                onClick={() => setShowCustomRulesPanel(!showCustomRulesPanel)}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Settings className="w-4 h-4" />
+                {showCustomRulesPanel ? 'Hide' : 'Manage'} Custom Rules
+              </Button>
+              <Button 
                 onClick={() => setLocation("/explore")}
                 variant="outline"
                 className="flex items-center gap-2"
@@ -215,7 +225,21 @@ export default function AuditDashboard() {
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
           <div className="p-6">
+            {/* Custom Rules Panel */}
+            {showCustomRulesPanel && (
+              <div className="mb-6">
+                <CustomRulesPanel 
+                  onRulesChange={() => {
+                    // Refresh flagged companies when custom rules change
+                    queryClient.invalidateQueries({ queryKey: ['/api/audit/flagged'] });
+                  }}
+                />
+              </div>
+            )}
+            
             {/* Summary Statistics */}
+            {!showCustomRulesPanel && (
+              <div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
               <Card>
                 <CardContent className="p-4">
@@ -308,6 +332,8 @@ export default function AuditDashboard() {
                   </div>
                 </CardContent>
               </Card>
+            )}
+            </div>
             )}
           </div>
         </main>

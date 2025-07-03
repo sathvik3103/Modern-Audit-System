@@ -1,3 +1,5 @@
+import { CustomRuleType } from '@shared/schema';
+
 export interface AuditRules {
   bubblegumThreshold: number;
   bubblegumEnabled: boolean;
@@ -17,6 +19,8 @@ export interface AuditRules {
   // Risk level thresholds
   highRiskThreshold: number;
   mediumRiskThreshold: number;
+  // Custom rules
+  customRules: CustomRuleType[];
 }
 
 export interface Company {

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { auditRulesSchema, type AuditRules, type FlaggedCompany, type InsertCompany, type InsertAudit } from "@shared/schema";
+import { auditRulesSchema, type AuditRules, type FlaggedCompany, type InsertCompany, type InsertAudit, insertCustomRuleSchema, customRuleSchema, type CustomRule, type InsertCustomRule } from "@shared/schema";
 import { generateAIInsights, generateMLExplanationSummary } from "./ai-service";
 import { z } from "zod";
 import { spawn } from "child_process";
@@ -146,6 +146,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
               riskScore: rules.dataConsistencyRiskScore
             });
             riskScore += rules.dataConsistencyRiskScore;
+          }
+        }
+        
+        // Apply custom rules
+        if (rules.customRules && rules.customRules.length > 0) {
+          for (const customRule of rules.customRules) {
+            if (!customRule.enabled) continue;
+            
+            const flagResult = evaluateCustomRule(company, customRule);
+            if (flagResult) {
+              flags.push(flagResult);
+              riskScore += flagResult.riskScore;
+            }
           }
         }
         
@@ -550,6 +563,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Custom Rules API Routes
+  app.get("/api/custom-rules/session/:sessionId", async (req, res) => {
+    try {
+      const sessionId = req.params.sessionId;
+      const rules = await storage.getCustomRulesBySessionId(sessionId);
+      res.json(rules);
+    } catch (error) {
+      console.error('Custom rules fetch error:', error);
+      res.status(500).json({ error: "Failed to fetch custom rules" });
+    }
+  });
+
+  app.post("/api/custom-rules", async (req, res) => {
+    try {
+      const ruleData = insertCustomRuleSchema.parse(req.body);
+      const rule = await storage.createCustomRule(ruleData);
+      res.json(rule);
+    } catch (error) {
+      console.error('Custom rule creation error:', error);
+      res.status(500).json({ error: "Failed to create custom rule" });
+    }
+  });
+
+  app.put("/api/custom-rules/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const rule = await storage.updateCustomRule(id, updates);
+      res.json(rule);
+    } catch (error) {
+      console.error('Custom rule update error:', error);
+      res.status(500).json({ error: "Failed to update custom rule" });
+    }
+  });
+
+  app.delete("/api/custom-rules/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteCustomRule(id);
+      res.json({ message: "Custom rule deleted successfully" });
+    } catch (error) {
+      console.error('Custom rule deletion error:', error);
+      res.status(500).json({ error: "Failed to delete custom rule" });
+    }
+  });
+
   // ML Analysis Routes
   app.post("/api/ml/analyze", async (req, res) => {
     try {
@@ -742,6 +802,137 @@ function generateRecommendation(company: any, audit: any, flags: any[]): string 
     return `Priority: Medium - Schedule audit within next 6 months. Monitor for ongoing compliance and data quality improvements.`;
   } else {
     return `Priority: Low - Standard audit cycle sufficient. Continue regular monitoring.`;
+  }
+}
+
+// Custom rule evaluation function
+function evaluateCustomRule(company: any, customRule: any): {flagType: string, flagReason: string, riskScore: number} | null {
+  const fieldValue = getCompanyFieldValue(company, customRule.fieldName);
+  
+  switch (customRule.operator) {
+    case '>':
+      const numValue1 = parseFloat(fieldValue || '0');
+      const threshold1 = parseFloat(customRule.value || '0');
+      if (numValue1 > threshold1) {
+        return {
+          flagType: `custom_${customRule.fieldName}_greater`,
+          flagReason: `${customRule.ruleName}: ${customRule.fieldName} value (${fieldValue}) exceeds threshold (${customRule.value})`,
+          riskScore: customRule.riskScore
+        };
+      }
+      break;
+      
+    case '<':
+      const numValue2 = parseFloat(fieldValue || '0');
+      const threshold2 = parseFloat(customRule.value || '0');
+      if (numValue2 < threshold2) {
+        return {
+          flagType: `custom_${customRule.fieldName}_less`,
+          flagReason: `${customRule.ruleName}: ${customRule.fieldName} value (${fieldValue}) is below threshold (${customRule.value})`,
+          riskScore: customRule.riskScore
+        };
+      }
+      break;
+      
+    case '>=':
+      const numValue3 = parseFloat(fieldValue || '0');
+      const threshold3 = parseFloat(customRule.value || '0');
+      if (numValue3 >= threshold3) {
+        return {
+          flagType: `custom_${customRule.fieldName}_greater_equal`,
+          flagReason: `${customRule.ruleName}: ${customRule.fieldName} value (${fieldValue}) meets or exceeds threshold (${customRule.value})`,
+          riskScore: customRule.riskScore
+        };
+      }
+      break;
+      
+    case '<=':
+      const numValue4 = parseFloat(fieldValue || '0');
+      const threshold4 = parseFloat(customRule.value || '0');
+      if (numValue4 <= threshold4) {
+        return {
+          flagType: `custom_${customRule.fieldName}_less_equal`,
+          flagReason: `${customRule.ruleName}: ${customRule.fieldName} value (${fieldValue}) is at or below threshold (${customRule.value})`,
+          riskScore: customRule.riskScore
+        };
+      }
+      break;
+      
+    case '==':
+      if (fieldValue === customRule.value) {
+        return {
+          flagType: `custom_${customRule.fieldName}_equal`,
+          flagReason: `${customRule.ruleName}: ${customRule.fieldName} matches specified value (${customRule.value})`,
+          riskScore: customRule.riskScore
+        };
+      }
+      break;
+      
+    case '!=':
+      if (fieldValue !== customRule.value) {
+        return {
+          flagType: `custom_${customRule.fieldName}_not_equal`,
+          flagReason: `${customRule.ruleName}: ${customRule.fieldName} value (${fieldValue}) does not match expected value (${customRule.value})`,
+          riskScore: customRule.riskScore
+        };
+      }
+      break;
+      
+    case 'contains':
+      if (fieldValue && fieldValue.toString().toLowerCase().includes(customRule.value?.toLowerCase() || '')) {
+        return {
+          flagType: `custom_${customRule.fieldName}_contains`,
+          flagReason: `${customRule.ruleName}: ${customRule.fieldName} contains "${customRule.value}"`,
+          riskScore: customRule.riskScore
+        };
+      }
+      break;
+      
+    case 'not_contains':
+      if (fieldValue && !fieldValue.toString().toLowerCase().includes(customRule.value?.toLowerCase() || '')) {
+        return {
+          flagType: `custom_${customRule.fieldName}_not_contains`,
+          flagReason: `${customRule.ruleName}: ${customRule.fieldName} does not contain "${customRule.value}"`,
+          riskScore: customRule.riskScore
+        };
+      }
+      break;
+      
+    case 'empty':
+      if (!fieldValue || fieldValue.toString().trim() === '') {
+        return {
+          flagType: `custom_${customRule.fieldName}_empty`,
+          flagReason: `${customRule.ruleName}: ${customRule.fieldName} is empty or missing`,
+          riskScore: customRule.riskScore
+        };
+      }
+      break;
+      
+    case 'not_empty':
+      if (fieldValue && fieldValue.toString().trim() !== '') {
+        return {
+          flagType: `custom_${customRule.fieldName}_not_empty`,
+          flagReason: `${customRule.ruleName}: ${customRule.fieldName} has a value`,
+          riskScore: customRule.riskScore
+        };
+      }
+      break;
+  }
+  
+  return null;
+}
+
+// Helper function to get company field value
+function getCompanyFieldValue(company: any, fieldName: string): string | null {
+  switch (fieldName) {
+    case 'corpName': return company.corpName;
+    case 'taxableIncome': return company.taxableIncome;
+    case 'salary': return company.salary;
+    case 'revenue': return company.revenue;
+    case 'amountTaxable': return company.amountTaxable;
+    case 'bubblegumTax': return company.bubblegumTax;
+    case 'confectionarySalesTaxPercent': return company.confectionarySalesTaxPercent;
+    default: return null;
   }
 }
 

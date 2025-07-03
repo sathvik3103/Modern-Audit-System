@@ -289,6 +289,45 @@ export default function AuditSidebar({ rules, onRulesChange, onApplyRules }: Aud
           </div>
         </div>
 
+        {/* Custom Rules Section */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-700">Custom Rules</h3>
+            <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+              {rules.customRules?.filter(rule => rule.enabled).length || 0} active
+            </Badge>
+          </div>
+          <p className="text-xs text-gray-500 mb-3">
+            Create custom rules to identify specific patterns in your data beyond the default audit criteria.
+          </p>
+          <div className="space-y-2">
+            {rules.customRules && rules.customRules.length > 0 ? (
+              rules.customRules.slice(0, 3).map((rule, index) => (
+                <div key={rule.id || index} className="bg-gray-50 p-2 rounded text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium truncate">{rule.ruleName}</span>
+                    <Badge variant={rule.enabled ? "default" : "secondary"} className="text-xs">
+                      {rule.enabled ? 'On' : 'Off'}
+                    </Badge>
+                  </div>
+                  <p className="text-gray-600 mt-1 truncate">
+                    Risk: {rule.riskScore} points
+                  </p>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-3 text-gray-500 text-xs">
+                No custom rules created yet
+              </div>
+            )}
+            {rules.customRules && rules.customRules.length > 3 && (
+              <p className="text-xs text-gray-500 text-center">
+                +{rules.customRules.length - 3} more custom rules
+              </p>
+            )}
+          </div>
+        </div>
+
         <Button 
           onClick={onApplyRules}
           className="w-full bg-audit-blue hover:bg-blue-700"

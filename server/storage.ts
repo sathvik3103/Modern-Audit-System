@@ -1,4 +1,4 @@
-import { companies, audits, auditFlags, anomalyFeedback, type Company, type InsertCompany, type Audit, type InsertAudit, type AuditFlag, type InsertAuditFlag, type AnomalyFeedback, type InsertAnomalyFeedback } from "@shared/schema";
+import { companies, audits, auditFlags, anomalyFeedback, customRules, type Company, type InsertCompany, type Audit, type InsertAudit, type AuditFlag, type InsertAuditFlag, type AnomalyFeedback, type InsertAnomalyFeedback, type CustomRule, type InsertCustomRule } from "@shared/schema";
 
 export interface IStorage {
   // Company operations
@@ -30,6 +30,15 @@ export interface IStorage {
   updateAnomalyFeedback(id: number, feedback: Partial<InsertAnomalyFeedback>): Promise<AnomalyFeedback>;
   bulkCreateAnomalyFeedback(feedback: InsertAnomalyFeedback[]): Promise<AnomalyFeedback[]>;
   clearAnomalyFeedback(): Promise<void>;
+  
+  // Custom rule operations
+  getCustomRules(): Promise<CustomRule[]>;
+  getCustomRulesBySessionId(sessionId: string): Promise<CustomRule[]>;
+  getCustomRule(id: number): Promise<CustomRule | undefined>;
+  createCustomRule(rule: InsertCustomRule): Promise<CustomRule>;
+  updateCustomRule(id: number, rule: Partial<InsertCustomRule>): Promise<CustomRule>;
+  deleteCustomRule(id: number): Promise<void>;
+  clearCustomRules(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -37,20 +46,24 @@ export class MemStorage implements IStorage {
   private audits: Map<number, Audit>;
   private flags: Map<number, AuditFlag>;
   private anomalyFeedback: Map<number, AnomalyFeedback>;
+  private customRules: Map<number, CustomRule>;
   private currentCompanyId: number;
   private currentAuditId: number;
   private currentFlagId: number;
   private currentAnomalyFeedbackId: number;
+  private currentCustomRuleId: number;
 
   constructor() {
     this.companies = new Map();
     this.audits = new Map();
     this.flags = new Map();
     this.anomalyFeedback = new Map();
+    this.customRules = new Map();
     this.currentCompanyId = 1;
     this.currentAuditId = 1;
     this.currentFlagId = 1;
     this.currentAnomalyFeedbackId = 1;
+    this.currentCustomRuleId = 1;
     
     // Initialize with sample data
     this.initializeSampleData();
@@ -469,6 +482,61 @@ export class MemStorage implements IStorage {
   async clearAnomalyFeedback(): Promise<void> {
     this.anomalyFeedback.clear();
     this.currentAnomalyFeedbackId = 1;
+  }
+
+  // Custom rule operations
+  async getCustomRules(): Promise<CustomRule[]> {
+    return Array.from(this.customRules.values());
+  }
+
+  async getCustomRulesBySessionId(sessionId: string): Promise<CustomRule[]> {
+    return Array.from(this.customRules.values()).filter(rule => rule.sessionId === sessionId);
+  }
+
+  async getCustomRule(id: number): Promise<CustomRule | undefined> {
+    return this.customRules.get(id);
+  }
+
+  async createCustomRule(insertRule: InsertCustomRule): Promise<CustomRule> {
+    const id = this.currentCustomRuleId++;
+    const rule: CustomRule = { 
+      id, 
+      sessionId: insertRule.sessionId,
+      ruleName: insertRule.ruleName,
+      fieldName: insertRule.fieldName,
+      operator: insertRule.operator,
+      value: insertRule.value || null,
+      riskScore: insertRule.riskScore,
+      enabled: insertRule.enabled !== undefined ? insertRule.enabled : true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.customRules.set(id, rule);
+    return rule;
+  }
+
+  async updateCustomRule(id: number, updates: Partial<InsertCustomRule>): Promise<CustomRule> {
+    const existingRule = this.customRules.get(id);
+    if (!existingRule) {
+      throw new Error(`Custom rule with id ${id} not found`);
+    }
+    
+    const updated: CustomRule = { 
+      ...existingRule, 
+      ...updates,
+      updatedAt: new Date()
+    };
+    this.customRules.set(id, updated);
+    return updated;
+  }
+
+  async deleteCustomRule(id: number): Promise<void> {
+    this.customRules.delete(id);
+  }
+
+  async clearCustomRules(): Promise<void> {
+    this.customRules.clear();
+    this.currentCustomRuleId = 1;
   }
 }
 

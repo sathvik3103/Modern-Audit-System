@@ -19,6 +19,8 @@ export const defaultRules: AuditRules = {
   // Risk level thresholds
   highRiskThreshold: 50,
   mediumRiskThreshold: 25,
+  // Custom rules
+  customRules: [],
 };
 
 export function calculateAuditSummary(flaggedCompanies: FlaggedCompany[]): AuditSummary {
