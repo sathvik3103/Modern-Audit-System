@@ -126,11 +126,6 @@ export default function AuditTable({ companies, loading, onShowExplanation, onEx
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h2 className="text-lg font-semibold text-gray-900">Flagged Corporate Files</h2>
-            {filteredCompanies.length !== companies.length && (
-              <Badge variant="secondary" className="text-xs">
-                {filteredCompanies.length} of {companies.length} shown
-              </Badge>
-            )}
           </div>
           <div className="flex items-center space-x-3">
             <AuditTableFilters 
