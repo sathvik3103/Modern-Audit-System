@@ -12,11 +12,12 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Info, Brain, Download, ArrowLeft, Eye, MessageSquare, FileText } from "lucide-react";
+import { Info, Brain, Download, ArrowLeft, Eye, MessageSquare, FileText, FileDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatCurrency, formatPercentage } from "@/lib/audit-rules";
 import { useToast } from "@/hooks/use-toast";
+import jsPDF from 'jspdf';
 
 interface MLParameters {
   contamination: number;
@@ -355,6 +356,179 @@ export default function MLAnalysisPage() {
     document.body.removeChild(link);
   };
 
+  const handleExportPDF = () => {
+    if (!mlResult || !mlResult.anomalies.length) return;
+
+    const doc = new jsPDF();
+    const currentDate = new Date().toLocaleString();
+    
+    // Helper function to add text with automatic wrapping
+    const addWrappedText = (text: string, x: number, y: number, maxWidth: number, fontSize: number = 10) => {
+      doc.setFontSize(fontSize);
+      const lines = doc.splitTextToSize(text, maxWidth);
+      doc.text(lines, x, y);
+      return y + (lines.length * fontSize * 0.4);
+    };
+
+    // Title and Header
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ML-Based Anomaly Detection Report', 20, 25);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated on: ${currentDate}`, 20, 35);
+    doc.text(`Session ID: ${sessionId}`, 20, 42);
+    
+    // Add horizontal line
+    doc.setLineWidth(0.5);
+    doc.line(20, 48, 190, 48);
+    
+    let currentY = 55;
+    
+    // Analysis Configuration Section
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Analysis Configuration', 20, currentY);
+    currentY += 10;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`• Contamination Rate: ${(mlResult.parameters_used.contamination * 100).toFixed(1)}%`, 25, currentY);
+    currentY += 6;
+    doc.text(`• Number of Neighbors: ${mlResult.parameters_used.n_neighbors}`, 25, currentY);
+    currentY += 6;
+    doc.text(`• Anomaly Threshold: ${mlResult.parameters_used.anomaly_threshold}`, 25, currentY);
+    currentY += 15;
+    
+    // Summary Statistics Section
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Summary Statistics', 20, currentY);
+    currentY += 10;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`• Total Records Analyzed: ${mlResult.total_records}`, 25, currentY);
+    currentY += 6;
+    doc.text(`• Anomalies Detected: ${mlResult.anomalies_detected}`, 25, currentY);
+    currentY += 6;
+    doc.text(`• Anomaly Rate: ${(mlResult.anomaly_rate * 100).toFixed(1)}%`, 25, currentY);
+    currentY += 15;
+    
+    // Feature Importance Section
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Feature Importance', 20, currentY);
+    currentY += 10;
+    
+    const featureEntries = Object.entries(mlResult.feature_importance || {})
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 8); // Top 8 features
+    
+    featureEntries.forEach(([feature, importance]) => {
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const featureText = `• ${feature}: ${(importance * 100).toFixed(1)}%`;
+      doc.text(featureText, 25, currentY);
+      currentY += 6;
+    });
+    
+    currentY += 10;
+    
+    // Check if we need a new page
+    if (currentY > 250) {
+      doc.addPage();
+      currentY = 25;
+    }
+    
+    // Detected Anomalies Table
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Detected Anomalies', 20, currentY);
+    currentY += 15;
+    
+    // Table headers
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    const headers = ['Company', 'Corp ID', 'Score', 'Method', 'Taxable Income', 'Bubblegum Tax', 'Feedback'];
+    const columnWidths = [35, 20, 18, 20, 25, 25, 25];
+    let startX = 20;
+    
+    headers.forEach((header, index) => {
+      doc.text(header, startX, currentY);
+      startX += columnWidths[index];
+    });
+    
+    currentY += 8;
+    
+    // Table data
+    doc.setFont('helvetica', 'normal');
+    mlResult.anomalies.forEach((anomaly, index) => {
+      if (currentY > 270) {
+        doc.addPage();
+        currentY = 25;
+        
+        // Repeat headers on new page
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        startX = 20;
+        headers.forEach((header, i) => {
+          doc.text(header, startX, currentY);
+          startX += columnWidths[i];
+        });
+        currentY += 8;
+        doc.setFont('helvetica', 'normal');
+      }
+      
+      const feedback = feedbackMap.get(anomaly.corp_id);
+      const feedbackLabels = {
+        accept_anomaly: "Accepted",
+        false_positive: "False +",
+        false_negative: "False -",
+        ignore: "Ignored"
+      };
+      
+      const rowData = [
+        anomaly.corp_name.length > 15 ? anomaly.corp_name.substring(0, 15) + '...' : anomaly.corp_name,
+        anomaly.corp_id.toString(),
+        anomaly.anomaly_score.toFixed(3),
+        anomaly.detection_method === 'isolation_forest' ? 'Isolation F.' : 'LOF',
+        formatCurrency(anomaly.record_data.taxableIncome),
+        formatCurrency(anomaly.record_data.bubblegumTax),
+        feedback ? feedbackLabels[feedback.feedbackType] || feedback.feedbackType : 'None'
+      ];
+      
+      startX = 20;
+      rowData.forEach((data, i) => {
+        const text = data || '';
+        doc.text(text.toString(), startX, currentY);
+        startX += columnWidths[i];
+      });
+      
+      currentY += 6;
+    });
+    
+    // Add footer to all pages
+    const totalPages = (doc as any).internal.pages.length - 1;
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Page ${i} of ${totalPages}`, 170, 285);
+      doc.text('ABCD Auditing - ML Anomaly Detection Report', 20, 285);
+    }
+    
+    // Save the PDF
+    const fileName = `ml_anomaly_detection_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+    
+    toast({
+      title: "PDF Export Complete",
+      description: "ML analysis report exported successfully",
+    });
+  };
+
   const getRiskColor = (score: number) => {
     if (score >= 0.7) return "bg-red-500";
     if (score >= 0.5) return "bg-orange-500";
@@ -550,6 +724,15 @@ export default function MLAnalysisPage() {
                       >
                         <Download className="w-4 h-4 mr-2" />
                         Export CSV
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleExportPDF}
+                        disabled={mlResult.anomalies.length === 0}
+                      >
+                        <FileDown className="w-4 h-4 mr-2" />
+                        Export PDF
                       </Button>
                     </div>
                   </div>
