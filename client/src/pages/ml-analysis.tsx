@@ -369,10 +369,10 @@ export default function MLAnalysisPage() {
     const explanations = new Map<number, LimeExplanation>();
     for (const anomaly of mlResult.anomalies) {
       try {
-        const response = await apiRequest('POST', '/api/ml/explain', {
-          recordIndex: anomaly.record_index,
-          anomalyScore: anomaly.anomaly_score,
-          explanationStyle: 'thresholds'
+        const response = await apiRequest('POST', `/api/ml/explain/${anomaly.record_index}`, {
+          anomaly_score: anomaly.anomaly_score,
+          explanation_style: 'thresholds',
+          parameters: parameters
         });
         const data = await response.json();
         if (data.success && data.explanation) {
