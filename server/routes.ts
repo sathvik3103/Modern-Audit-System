@@ -940,7 +940,7 @@ function getCompanyFieldValue(company: any, fieldName: string): string | null {
 async function runPythonMLService(command: string, inputData: any): Promise<any> {
   return new Promise((resolve, reject) => {
     const pythonScript = path.join(process.cwd(), 'server', 'ml_service.py');
-    const pythonProcess = spawn('python3', [pythonScript, command]);
+    const pythonProcess = spawn('./.venv/bin/python', [pythonScript, command]);
     
     let stdout = '';
     let stderr = '';
